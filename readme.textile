@@ -32,7 +32,7 @@ h3. Input Parameters
 
 Your programs should have the following command-line options to set corresponding input parameters for simulation:
  
-|_. Command |_. Description |
+|_. Option |_. Description |
 | -n [int] | to set the number of particles; the default value is 1000 (hard-coded in the above programs) |
 | -s [int]	| to set the number of steps in the simulation; the default value is NSTEPS = 1000 defined in common.h |
 | -o [filename]	| to specify the output file name |
