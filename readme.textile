@@ -5,6 +5,7 @@ h1. Programming Project: Parallelize Particle Simulation
 h2. Objectives
 
 The main objectives of this assignment can be summarized as follows:
+<<<<<<< HEAD
 
 * To understand how to develop parallel applications in shared and distributed memory models;
 * To get some practical skiils in improving performance of a parallel application by modifying its algorithm in order to find and exploite available parallelism or/and to improve the level of parallelism in the application;
@@ -27,6 +28,30 @@ Given four particle simulation programs of _O(n^2)_ time complexity, you are to 
 # A parallel program using Pthreads that runs in time close to _T/p_ when using _p_ processors.
 # A parallel program using OpenMP (with/without tasks) that runs in time close to _T/p_ when using _p_ processors.
 # A parallel program using MPI that runs in time close to _T/p_ when using _p_ processors.
+=======
+
+* To understand how to develop parallel applications in shared and distributed memory models;
+* To get some practical skiils in improving performance of a parallel application by modifying its algorithm in order to find and exploite available parallelism or/and to improve the level of parallelism in the application;
+* To understand how to implement a distributed multithreaded application in a distributed environment;
+* To implement a multithreaded application.
+
+h2. Task
+
+Your task is to parallelize a toy particle simulator (similar particle simulators are used in mechanics, biology, astronomy, etc.) that reproduces the behaviour shown in the following animation:
+
+The range of interaction forces is limited as shown in grey for a selected particle. Density is set sufficiently low so that given n particles, only _O(n)_ interactions are expected (compare with the time complexity _O(n^2)_ of a complete gravitational N-body simulation).
+
+Suppose we have a code that runs in time _T = O(n)_ on a single processor. Then we'd hope to run in time _T/p_ when using _p_ processors. We'd like you to write parallel codes that approach these expectations.
+
+h3. Programs to Develop and to Evaluate
+
+Given four particle simulation programs of O(n2) time complexity, you are to improve performance of the programs, i.e. develop and to evaluate the following four particle simulation programs
+
+# A sequential program that runs in time T = O(n), where n is thenumber of particles.
+# A parallel program using Pthreads that runs in time close to T/p when using p processors.
+# A parallel program using OpenMP (with/without tasks) that runs in time close to T/p when using p processors.
+# A parallel program using MPI that runs in time close to T/p when using p processors.
+>>>>>>> 049e94e03e18c6fc053625be2e811acb619a349f
 
 h3. Input Parameters
 
