@@ -1,77 +1,63 @@
-Programming Project: Parallelize Particle Simulation
+h1. Programming Project: Parallelize Particle Simulation
 
-Acknowledgment: The assignment is adapted from the CS267 Assignment 2: Parallelize Particle Simulation of the CS267 Applications of Parallel Computers course at U.C. Berkeley, USA.
+*Acknowledgment: The assignment is adapted from the CS267 Assignment 2: Parallelize Particle Simulation of the CS267 Applications of Parallel Computers course at U.C. Berkeley, USA.*
 
-Objectives
+h2. Objectives
 
 The main objectives of this assignment can be summarized as follows:
-To understand how to develop parallel applications in shared and distributed memory models;
-To get some practical skiils in improving performance of a parallel application by modifying its algorithm in order to find and exploite available parallelism or/and to improve the level of parallelism in the application;
-To understand how to implement a distributed multithreaded application in a distributed environment;
-To implement a multithreaded application.
-Task
+
+* To understand how to develop parallel applications in shared and distributed memory models;
+* To get some practical skiils in improving performance of a parallel application by modifying its algorithm in order to find and exploite available parallelism or/and to improve the level of parallelism in the application;
+* To understand how to implement a distributed multithreaded application in a distributed environment;
+* To implement a multithreaded application.
+
+h2. Task
 
 Your task is to parallelize a toy particle simulator (similar particle simulators are used in mechanics, biology, astronomy, etc.) that reproduces the behaviour shown in the following animation:
 
+The range of interaction forces is limited as shown in grey for a selected particle. Density is set sufficiently low so that given n particles, only _O(n)_ interactions are expected (compare with the time complexity _O(n^2)_ of a complete gravitational N-body simulation).
 
-The range of interaction forces is limited as shown in grey for a selected particle. Density is set sufficiently low so that given n particles, only O(n) interactions are expected (compare with the time complexity O(n2) of a complete gravitational N-body simulation).
+Suppose we have a code that runs in time _T = O(n)_ on a single processor. Then we'd hope to run in time _T/p_ when using _p_ processors. We'd like you to write parallel codes that approach these expectations.
 
-Suppose we have a code that runs in time T = O(n) on a single processor. Then we'd hope to run in time T/p when using p processors. We'd like you to write parallel codes that approach these expectations.
-
-Programs to Develop and to Evaluate
+h3. Programs to Develop and to Evaluate
 
 Given four particle simulation programs of O(n2) time complexity, you are to improve performance of the programs, i.e. develop and to evaluate the following four particle simulation programs
-A sequential program that runs in time T = O(n), where n is thenumber of particles.
-A parallel program using Pthreads that runs in time close to T/p when using p processors.
-A parallel program using OpenMP (with/without tasks) that runs in time close to T/p when using p processors.
-A parallel program using MPI that runs in time close to T/p when using p processors.
-Given Source Code
 
-You may start with the serial and parallel implementations supplied below. All of them run in O(n2) time, which is unacceptably inefficient. 
+# A sequential program that runs in time T = O(n), where n is thenumber of particles.
+# A parallel program using Pthreads that runs in time close to T/p when using p processors.
+# A parallel program using OpenMP (with/without tasks) that runs in time close to T/p when using p processors.
+# A parallel program using MPI that runs in time close to T/p when using p processors.
 
-
-serial.cpp
-a serial implementation,
-openmp.cpp
-a shared memory parallel implementation done using OpenMP,
-pthreads.cpp
-a shared memory parallel implementation done using pthreads,
-mpi.cpp
-a distributed memory parallel implementation done using MPI,
-common.cpp, common.h
-an implementation of common functionality, such as I/O, numerics and timing,
-Makefile
-a makefile that should work on computers with Red Hat Enterprise Linux 5 in the computer room 648, KTH Forum, Kista.
-particles.zip
-all above files in one zip file.
-To see command-line options, run the programs with -h option. You may consider using the following visualization program to check the correctness of the result produced by your code: Linux/Mac version (requires SDL), Windows version. 
-
-Input Parameters
+h3. Input Parameters
 
 Your programs should have the following command-line options to set corresponding input parameters for simulation:
  
--n <int>	to set the number of particles; the default value is 1000 (hard-coded in the above programs)
--s <int>	to set the number of steps in the simulation; the default value is NSTEPS = 1000 defined in common.h
--o <filename>	to specify the output file name
--f <int>
-to set the frequency of saving particle coordinates (e.g. each ten's step); the default value is SAVEFREQ = 10 defined in common.h
-Output
+| -n <int> | to set the number of particles; the default value is 1000 (hard-coded in the above programs) | 
+| -s <int>	| to set the number of steps in the simulation; the default value is NSTEPS = 1000 defined in common.h | 
+| -o <filename>	| to specify the output file name | 
+| -f <int> | to set the frequency of saving particle coordinates (e.g. each ten's step); the default value is SAVEFREQ = 10 defined in common.h |
+
+h3. Output
 
 The output from your programs should be similar to the one in the given programms above, i.e. the command-line arguments and  the execution (simulation) time. If an putfile file is given, your program (by analogy to the rpgorams above) should save the simulation data (the number of particles, the size of the simulation space and particales coordinates at steps as defined by the saving fraquency) to the file. You may consider using the following visualization program to display moving particles: Linux/Mac version (requires SDL), Windows version.
-Report
+
+h3. Report
 
 In your report you should explain what you have done and what you have learned. Your report should be few (about 10) pages of text plus tables and figures and an optional Appendix. Here is the list of items you should show in your report:
-A plot in log-log scale that shows that your serial and parallel codes run in O(n) time and a description of the data structures that you used to achieve it. In order to get more precise timing estimates, we recommend you to run a program at least 5 times and take the median (rather than the mean) of the simulation times.
-A description of the synchronization you used in the shared memory implementation.
-A description of the communication you used in the distributed memory implementation.
-A description of the design choices that you tried and how did they affect the performance.
-Speedup plots that show how closely your parallel codes approach the idealized p-times speedup and a discussion on whether it is possible to do better.
-Where does the time go? Consider breaking down the runtime into computation time, synchronization time and/or communication time. How do they scale with p?
-A discussion on using pthreads, OpenMP and MPI.
-Resources
+* A plot in log-log scale that shows that your serial and parallel codes run in O(n) time and a description of the data structures that you used to achieve it. In order to get more precise timing estimates, we recommend you to run a program at least 5 times and take the median (rather than the mean) of the simulation times.
+* A description of the synchronization you used in the shared memory implementation.
+* A description of the communication you used in the distributed memory implementation.
+* A description of the design choices that you tried and how did they affect the performance.
+* Speedup plots that show how closely your parallel codes approach the idealized p-times speedup and a discussion on whether it is possible to do better.
+* Where does the time go? Consider breaking down the runtime into computation time, synchronization time and/or communication time. How do they scale with p?
+* A discussion on using pthreads, OpenMP and MPI.
 
-Programming in shared and distributed memory models have been introduced in Lectures, which are available at the course website.
-Shared memory implementations may require using locks that are availabale as omp_lock_t in OpenMP (requires omp.h) and pthread_mutex_t in pthreads (requires pthread.h).
-Alternatively, you may consider using atomic operations such as __sync_lock_test_and_set in the newer versions of the GNU compiler.
-Distributed memory implementation may benefit from overlapping communication and computation that is provided by nonblocking MPI routines such as MPI_Isend and MPI_Irecv.
-Other useful resources can be found on the page Related Links.
+h3. Resources
+
+* Programming in shared and distributed memory models have been introduced in Lectures, which are available at the course website.
+* Shared memory implementations may require using locks that are availabale as omp_lock_t in OpenMP (requires omp.h) and pthread_mutex_t in pthreads (requires pthread.h).
+* Alternatively, you may consider using atomic operations such as __sync_lock_test_and_set in the newer versions of the GNU compiler.
+* Distributed memory implementation may benefit from overlapping communication and computation that is provided by nonblocking MPI routines such as MPI_Isend and MPI_Irecv.
+* Other useful resources can be found on the page Related Links.
+
+*Acknowledgment: The project task is adapted from the CS267 Assignment 2: Parallelize Particle Simulation of the CS267 Applications of Parallel Computers course at U.C. Berkeley, USA.*
