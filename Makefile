@@ -1,35 +1,21 @@
 #
 # Computers with Red Hat Enterprise Linux 5 in the computer room 648, KTH Forum, Kista
 #
-CC = g++44
-MPCC =  mpicc -cc=g++44
-OPENMP = -fopenmp
-LIBS = -lm
-CFLAGS = -O3
+CC = g++
+MPCC =  mpicc -cc=gcc
 
 TARGETS = serial pthreads openmp mpi
 
 all:	$(TARGETS)
 
-serial: serial.o common.o
-	$(CC) -o $@ $(LIBS) serial.o common.o
-pthreads: pthreads.o common.o
-	$(CC) -o $@ $(LIBS) -lpthread pthreads.o common.o
-openmp: openmp.o common.o
-	$(CC) -o $@ $(LIBS) $(OPENMP) openmp.o common.o
-mpi: mpi.o common.o
-	$(MPCC) -o $@ $(LIBS) $(MPILIBS) mpi.o common.o
-
-openmp.o: openmp.cpp common.h
-	$(CC) -c $(OPENMP) $(CFLAGS) openmp.cpp
-serial.o: serial.cpp common.h
-	$(CC) -c $(CFLAGS) serial.cpp
-pthreads.o: pthreads.cpp common.h
-	$(CC) -c $(CFLAGS) pthreads.cpp
-mpi.o: mpi.cpp common.h
-	$(MPCC) -c $(CFLAGS) mpi.cpp
-common.o: common.cpp common.h
-	$(CC) -c $(CFLAGS) common.cpp
+serial:
+	$(CC) -O3 -o $@ -lm serial.cpp common.cpp
+pthreads:
+	$(CC) -O3 -o $@ pthreads.cpp common.cpp -lm -lpthread
+openmp:
+	$(CC) -O3 -o $@ openmp.cpp common.cpp -lm -fopenmp
+mpi:
+	$(CC) -O3 -o $@ mpi.cpp common.cpp -lmpicxx -lmpi
 
 clean:
 	rm -f *.o $(TARGETS)

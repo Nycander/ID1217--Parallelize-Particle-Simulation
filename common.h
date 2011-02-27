@@ -1,14 +1,17 @@
-#ifndef __CS267_COMMON_H__
-#define __CS267_COMMON_H__
+#ifndef __CS_COMMON_H__
+#define __CS_COMMON_H__
 
-inline int min( int a, int b ) { return a < b ? a : b; }
-inline int max( int a, int b ) { return a > b ? a : b; }
+
+
+inline int Min( int a, int b ) { return a < b ? a : b; }
+inline int Max( int a, int b ) { return a > b ? a : b; }
 
 //
 //  saving parameters
 //
 const int NSTEPS = 1000;
 const int SAVEFREQ = 10;
+
 
 //
 // particle data structure
