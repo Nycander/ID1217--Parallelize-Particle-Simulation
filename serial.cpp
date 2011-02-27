@@ -4,8 +4,10 @@
 #include <math.h>
 #include <string.h>
 #include "common.h"
+#include <vector>
 
 #define DEBUG 1
+using namespace std;
 
 int gridCoord(double c)
 {
@@ -16,7 +18,7 @@ int gridCoord(double c)
 //  benchmarking program
 //
 int main( int argc, char **argv )
-{    
+{
 	if( find_option( argc, argv, "-h" ) >= 0 )
 	{
 		printf( "Options:\n" );
@@ -35,12 +37,12 @@ int main( int argc, char **argv )
 	double size = set_size( n );
 	init_particles( n, particles );
 	// Create a grid for optimizing the interactions
-	int gridSize = size/cutoff; // TODO: Rounding errors?
-	int grid[gridSize][gridSize];
+	int gridSize = (size/cutoff) + 1; // TODO: Rounding errors?
+	vector<int> grid[gridSize][gridSize];
 
 	for(int i = 0; i < gridSize; i++)
 	for(int j = 0; j < gridSize; j++)
-		grid[i][j] = -1;
+		grid[i][j] = vector<int>();
 
 	printf("Creating grid of size %dx%d...\n", gridSize, gridSize); fflush(stdout);
 
@@ -49,14 +51,7 @@ int main( int argc, char **argv )
 		particle_t * p = &particles[i];
 		int gridx = gridCoord(p->x);
 		int gridy = gridCoord(p->y);
-
-		if (grid[gridx][gridy] != -1)
-		{
-			fprintf(stderr, "FUUUUU\n");
-			exit(1);
-		}
-
-		grid[gridx][gridy] = i;
+		grid[gridx][gridy].push_back(i);
 	}
 	
 
@@ -83,10 +78,10 @@ int main( int argc, char **argv )
 			{
 				for(int y = Max(gy - 1, 0); y <= Min(gy + 1, gridSize-1); y++)
 				{
-					if (grid[x][y] == -1)
-						continue;
-					
-					apply_force(particles[i], particles[grid[x][y]]);
+                    for(int p = 0; p < grid[x][y].size(); p++)
+                    {
+                        apply_force(particles[i], particles[grid[x][y][p]]);
+                    }
 				}
 			}
 		}
@@ -98,7 +93,7 @@ int main( int argc, char **argv )
 		// Reset grid
 		for(int i = 0; i < gridSize; i++)
 		for(int j = 0; j < gridSize; j++)
-			grid[i][j] = -1;
+			grid[i][j].clear();
 
 		//
 		//  move particles
@@ -115,15 +110,9 @@ int main( int argc, char **argv )
 			int gridx = gridCoord(particles[i].x);
 			int gridy = gridCoord(particles[i].y);
 
-			if (grid[gridx][gridy] != -1)
-			{
-				fprintf(stderr, "%.3f,%.3f (%d,%d) <- FUUUU\n", particles[i].x, particles[i].y, gridCoord(particles[i].x), gridCoord(particles[i].y));
-				exit(3);
-			}
-
-			grid[gridx][gridy] = i;
+			grid[gridx][gridy].push_back(i);
 #if DEBUG
-			printf("%.3f,%.3f (%d,%d)\n", particles[i].x, particles[i].y, gridCoord(particles[i].x), gridCoord(particles[i].y));
+			printf("%.3f,%.3f (%d,%d)\n", particles[i].x, particles[i].y, gridx, gridy);
 			fflush(stdout);
 #endif
 		}
