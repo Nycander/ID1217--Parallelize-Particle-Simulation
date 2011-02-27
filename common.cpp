@@ -25,24 +25,25 @@ double size;
 //
 double read_timer( )
 {
-static bool initialized = false;
-static struct timeval start;
-struct timeval end;
-if( !initialized )
-{
-gettimeofday( &start, NULL );
-initialized = true;
-}
-gettimeofday( &end, NULL );
-return (end.tv_sec - start.tv_sec) + 1.0e-6 * (end.tv_usec - start.tv_usec);
+	static bool initialized = false;
+	static struct timeval start;
+	struct timeval end;
+	if( !initialized )
+	{
+		gettimeofday( &start, NULL );
+		initialized = true;
+	}
+	gettimeofday( &end, NULL );
+	return (end.tv_sec - start.tv_sec) + 1.0e-6 * (end.tv_usec - start.tv_usec);
 }
 
 //
 //  keep density constant
 //
-void set_size( int n )
+double set_size( int n )
 {
-size = sqrt( density * n );
+	size = sqrt( density * n );
+	return size;
 }
 
 //
@@ -52,18 +53,17 @@ void init_particles( int n, particle_t *p )
 {
 // TODO: Use portable c code
 #ifdef _WIN32
-srand((long)time(NULL));
+	srand((long)time(NULL));
 #else
-srand48( (long)time(NULL) );
+	srand48( (long)time(NULL) );
 #endif
 
+	int sx = (int)ceil(sqrt((double)n));
+	int sy = (n+sx-1)/sx;
 
-int sx = (int)ceil(sqrt((double)n));
-int sy = (n+sx-1)/sx;
-
-int *shuffle = (int*)malloc( n * sizeof(int) );
-for( int i = 0; i < n; i++ )
-shuffle[i] = i;
+	int *shuffle = (int*)malloc( n * sizeof(int) );
+	for( int i = 0; i < n; i++ )
+	shuffle[i] = i;
 
 	for( int i = 0; i < n; i++ ) 
 	{
