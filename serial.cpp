@@ -5,6 +5,8 @@
 #include <string.h>
 #include "common.h"
 
+#define DEBUG 1
+
 int gridCoord(double c)
 {
 	return c / cutoff; // TODO: Roundoff errors?
@@ -37,8 +39,8 @@ int main( int argc, char **argv )
 	particle_t * grid[gridSize][gridSize];
 
 	for(int i = 0; i < gridSize; i++)
-		for(int j = 0; j < gridSize; j++)
-			grid[i][j] = 0;
+	for(int j = 0; j < gridSize; j++)
+		grid[i][j] = 0;
 
 	printf("Creating grid of size %dx%d...\n", gridSize, gridSize); fflush(stdout);
 
@@ -57,6 +59,7 @@ int main( int argc, char **argv )
 		grid[gridx][gridy] = p;
 	}
 	
+
 	//
 	//  simulate a number of time steps
 	//
@@ -68,50 +71,70 @@ int main( int argc, char **argv )
 		//
 		for( int i = 0; i < n; i++ )
 		{
-			particle_t p = particles[i];
-			p.ax = p.ay = 0; // Reset acceleration
-			int gx = gridCoord(p.x);
-			int gy = gridCoord(p.y);
+			 // Reset acceleration
+			particles[i].ax = particles[i].ay = 0;
 
-			printf("Checking forces for particle at %.3f,%.3f (grid: %d,%d)...\n", p.x, p.y, gx, gy); fflush(stdout);
+			particle_t * p = &particles[i];
+			int gx = gridCoord(p->x);
+			int gy = gridCoord(p->y);
+
+#if DEBUG
+			printf("\tForcecheck: %.3f,%.3f (grid: %d,%d)...\n", p->x, p->y, gx, gy); fflush(stdout);
+#endif
 			for(int x = Max(gx - 1, 0); x <= Min(gx + 1, gridSize-1); x++)
 			{
 				for(int y = Max(gy - 1, 0); y <= Min(gy + 1, gridSize-1); y++)
 				{
 					if (grid[x][y] == 0)
 						continue;
-					particle_t p2 = *grid[x][y];
-					printf("\tInteraction with particle at %.3f,%.3f (grid: %d,%d)...", p2.x, p2.y, x, y); fflush(stdout);
-					apply_force(p, p2);
-					printf(" Done.\n"); fflush(stdout);
+					
+					particle_t * p2 = grid[x][y];
+
+					apply_force(*p, *p2);
 				}
 			}
 		}
-		
+
+#if DEBUG
+		printf("\nMoving particles phase...\n");
+		fflush(stdout);
+#endif
+		// Reset grid
+		for(int i = 0; i < gridSize; i++)
+		for(int j = 0; j < gridSize; j++)
+			grid[i][j] = 0;
+
 		//
 		//  move particles
 		//
 		for( int i = 0; i < n; i++ ) 
 		{
-			particle_t p = particles[i];
-			int gx = gridCoord(p.x);
-			int gy = gridCoord(p.y);
-
-			move( p );
+#if DEBUG
 			
-			// The particle has switched grid cell
-			if (gridCoord(p.x) != gx || gridCoord(p.y) != gy)
+			printf("\tMove: %.3f,%.3f (%d,%d) -> ", particles[i].x, particles[i].y, gridCoord(particles[i].x), gridCoord(particles[i].y));
+			fflush(stdout);
+#endif
+			move( particles[i] );
+			int gridx = gridCoord(particles[i].x);
+			int gridy = gridCoord(particles[i].y);
+
+			if (grid[gridx][gridy] != 0)
 			{
-				if (grid[gridCoord(p.x)][gridCoord(p.y)] != 0)
-				{
-					fprintf(stderr, "FUUUUU\n");
-					exit(3);
-				}
-				grid[gx][gy] = 0;
-				grid[gridCoord(p.x)][gridCoord(p.y)] = &p;
+				fprintf(stderr, "%.3f,%.3f (%d,%d) <- FUUUU\n", particles[i].x, particles[i].y, gridCoord(particles[i].x), gridCoord(particles[i].y));
+				exit(3);
 			}
+
+			grid[gridx][gridy] = &particles[i];
+#if DEBUG
+			printf("%.3f,%.3f (%d,%d)\n", particles[i].x, particles[i].y, gridCoord(particles[i].x), gridCoord(particles[i].y));
+			fflush(stdout);
+#endif
 		}
-		
+
+#if DEBUG
+		printf("\nSaving?\n"); fflush(stdout);
+#endif		
+
 		//
 		//  save if necessary
 		//
