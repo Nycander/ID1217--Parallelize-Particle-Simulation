@@ -44,10 +44,17 @@ int main( int argc, char **argv )
 
 	for(int i = 0; i < n; i++)
 	{
-		particle_t p = particles[i];
-		int gridx = gridCoord(p.x);
-		int gridy = gridCoord(p.y);
-		grid[gridx][gridy] = &p;
+		particle_t * p = &particles[i];
+		int gridx = gridCoord(p->x);
+		int gridy = gridCoord(p->y);
+
+		if (grid[gridx][gridy] != 0)
+		{
+			fprintf(stderr, "FUUUUU\n");
+			exit(3);
+		}
+
+		grid[gridx][gridy] = p;
 	}
 	
 	//
@@ -95,6 +102,11 @@ int main( int argc, char **argv )
 			// The particle has switched grid cell
 			if (gridCoord(p.x) != gx || gridCoord(p.y) != gy)
 			{
+				if (grid[gridCoord(p.x)][gridCoord(p.y)] != 0)
+				{
+					fprintf(stderr, "FUUUUU\n");
+					exit(3);
+				}
 				grid[gx][gy] = 0;
 				grid[gridCoord(p.x)][gridCoord(p.y)] = &p;
 			}
