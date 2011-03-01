@@ -6,7 +6,7 @@
 #include "common.h"
 #include <vector>
 
-#define DEBUG 1
+#define DEBUG 0
 using namespace std;
 
 int gridCoord(double c)
