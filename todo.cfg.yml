@@ -1,0 +1,42 @@
+
+# The filename of the todo file, comment the follow line if no file should be written to.
+filename:           'todo.txt'
+
+# Set to true if subdirs should be scanned
+recursive:          true
+
+# Todo-keywords are listed here, they are mapped to a priority (you can opt out by specifying an empty string)
+todo_notations:
+                    FIXME:  'A'
+                    TODO:   ''
+
+# If true, the program will write the contents of todo.txt to stdout.
+print_result:       true
+
+# If true the todo file will be overwritten everytime this file is run.
+# If false it will try to detect what todo's already exists and only add new ones
+force_overwrite:    true
+
+# Tags each line with the name of the current directory, compliant with the todo.txt standard.
+tag_with_project:   false
+
+# Regexp rules for replacing naming the location of the task see http://www.ruby-doc.org/core/classes/String.html#M001186 for more information.
+# Macros: $line
+location_pattern:   ['^.*?/([^/]+/)?([^/]+)$', '...\1\2:$line']
+
+# Define any tags here, defined macros are $filename, $directory, $fileextension
+# Note: Spaces ( ) will be replaced by dashes (-)
+tags:               []
+
+# Define exclusions here. All exclusions are regular expressions.
+# 'files' is an array of filenames only, 'dirs' are directory names and 'paths' matches full paths.
+exclude:
+    files:          ['^todoscan.rb$']
+    dirs:           ['\.git$', '\.svn$']
+    paths:          []
+# Inclusions go here. Only files which matches these patterns will be included.
+# If no patterns are defined, all files will be included (except for any exclusion rules)
+include:
+    files:          ['\.c(pp|c|xx|s)?$', '\.d$', '\.h$', '\.m$', '\.php.?$', '\.x?html?$', '\.xml$', '\.js$', '\.css$', '\.md$', '\.textile$', '\.java$', '\.pl$', '\.bat$', '\.lua$', '\.py.?$', '\.rb$', '\.sh$', '\.tex$']
+    dirs:           []
+    paths:          []

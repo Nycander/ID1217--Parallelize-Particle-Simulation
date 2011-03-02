@@ -1,0 +1,73 @@
+\documentclass[titlepage,a4paper,10pt]{article}
+% Språk och encodings
+\usepackage[swedish,english]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[fixlanguage]{babelbib}
+% Images and floats
+\usepackage{graphicx}
+\usepackage{wrapfig}
+\usepackage{float}
+% Clear type + Sans-serif font
+\usepackage{lmodern}
+\renewcommand{\familydefault}{\sfdefault}
+% Matte
+\usepackage{amsmath, amsthm, amssymb}
+% Algoritmer
+\usepackage[ruled,vlined]{algorithm2e}
+% Länkar
+\usepackage{color}
+\definecolor{dark-blue}{rgb}{0, 0, 0.6}
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=dark-blue,
+  urlcolor=dark-blue
+}
+% Vettiga paragrafer
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{2ex}
+
+% Sidhuvud/sidfot
+\usepackage{fancyhdr}
+\setlength{\headheight}{15pt}
+\pagestyle{fancyplain}
+\lfoot{Carl-Oscar Erneholm \\ 880422-0872 \\ coer@kth.se}
+\rfoot{Martin Nycander \\ 881028-0076 \\ mnyc@kth.se}
+\cfoot{Sida \thepage}
+
+% Språk
+\selectbiblanguage{swedish}
+\selectlanguage{swedish}
+
+% Titel
+\title{Programming Project: Parallelize Particle Simulation}
+\author{Martin Nycander \and Carl-Oscar Erneholm}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Problem definition}
+
+\section{Problem solutions}
+
+% TODO: A description of the synchronization you used in the shared memory implementation.
+
+% TODO: A description of the communication you used in the distributed memory implementation.
+
+% TODO: A description of the design choices that you tried and how did they affect the performance.
+
+\section{Results}
+
+% TODO: A plot in log-log scale that shows that your serial and parallel codes run in O(n) time and a description of the data structures that you used to achieve it. In order to get more precise timing estimates, we recommend you to run a program at least 5 times and take the median (rather than the mean) of the simulation times.
+
+% TODO: Speedup plots that show how closely your parallel codes approach the idealized p-times speedup and a discussion on whether it is possible to do better.
+
+% TODO: Where does the time go? Consider breaking down the runtime into computation time, synchronization time and/or communication time. How do they scale with p?
+
+\section{Discussion}
+
+% TODO: A discussion on using pthreads, OpenMP and MPI.
+
+\end{document}
