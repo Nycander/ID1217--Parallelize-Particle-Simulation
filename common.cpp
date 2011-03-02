@@ -5,6 +5,7 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
+#include <limits.h>
 #include <sys/time.h>
 
 #include "common.h"
@@ -63,7 +64,7 @@ void init_particles( int n, particle_t *p )
 
 	int *shuffle = (int*)malloc( n * sizeof(int) );
 	for( int i = 0; i < n; i++ )
-	shuffle[i] = i;
+		shuffle[i] = i;
 
 	for( int i = 0; i < n; i++ ) 
 	{
@@ -90,8 +91,8 @@ void init_particles( int n, particle_t *p )
 		//  assign random velocities within a bound
 		//
 #ifdef _WIN32
-		p[i].vx = rand()*2-1;
-		p[i].vy = rand()*2-1;
+		p[i].vx = (double)(rand()/(double)INT_MAX)*2-1;
+		p[i].vy = (double)(rand()/(double)INT_MAX)*2-1;
 #else
 		p[i].vx = drand48()*2-1;
 		p[i].vy = drand48()*2-1;
