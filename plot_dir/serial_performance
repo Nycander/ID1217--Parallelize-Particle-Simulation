@@ -1,14 +1,14 @@
-0.000698
-0.000631
-0.00063
-0.000662
-0.000624
-0.00063
-0.000553
-0.001319
-0.000628
-0.000554
-0.000264
-0.000264
-0.00063
-0.000629
+n = 1, simulation time = 0.000631 seconds
+n = 2, simulation time = 0.001253 seconds
+n = 4, simulation time = 0.002493 seconds
+n = 8, simulation time = 0.005043 seconds
+n = 16, simulation time = 0.005078 seconds
+n = 32, simulation time = 0.008854 seconds
+n = 64, simulation time = 0.03653 seconds
+n = 128, simulation time = 0.08532 seconds
+n = 256, simulation time = 0.16243 seconds
+n = 512, simulation time = 0.30768 seconds
+n = 1024, simulation time = 0.264295 seconds
+n = 2048, simulation time = 0.563023 seconds
+n = 4096, simulation time = 2.5346 seconds
+n = 8192, simulation time = 3.96478 seconds
