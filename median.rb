@@ -1,5 +1,5 @@
 floats = []
-ARGV.each do | a |
+ARGF.each do | a |
 	if a.to_f == 0.0
 		$stderr.puts "FU! Invalid argument supplied. '#{a}' is not a float!"
 		exit
