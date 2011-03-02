@@ -1,10 +1,11 @@
 floats = []
 ARGF.each do | a |
-	if a.to_f == 0.0
-		$stderr.puts "FU! Invalid argument supplied. '#{a}' is not a float!"
+	f = a.trim.to_f
+	if f == 0.0
+		$stderr.puts "FU! Invalid argument supplied. '#{a.trim}' is not a float!"
 		exit
 	end
-	floats << a.to_f
+	floats << f
 end
 
 floats.sort!
