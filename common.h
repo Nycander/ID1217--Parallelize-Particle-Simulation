@@ -61,8 +61,11 @@ void move( particle_t &p );
 //
 void grid_init(grid_t * grid, int gridsize);
 void grid_clear(grid_t * grid);
-void grid_populate(grid_t * grid, particle_t * particles, int n);
+void grid_add(grid_t * grid, particle_t * particle, int pid);
 int grid_coord(double c);
+
+void grid_omp_clear(grid_t * grid);
+void grid_omp_populate(grid_t * grid, particle_t * particles, int n);
 
 //
 //  I/O routines

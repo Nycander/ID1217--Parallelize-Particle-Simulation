@@ -28,7 +28,7 @@ int main( int argc, char **argv )
 
 	char *savename = read_string( argc, argv, "-o", NULL );
 	
-	FILE *fsave = savename ? fopen( savename, "w" ) : stdout ;
+	FILE *fsave = savename ? fopen( savename, "w" ) : NULL ;
 	particle_t * particles = (particle_t*) malloc( n * sizeof(particle_t) );
 	double size = set_size( n );
 	init_particles( n, particles );
@@ -40,7 +40,10 @@ int main( int argc, char **argv )
 	grid_t grid;
 	grid.v = tmp;
 	grid_init(&grid, gridSize);
-	grid_populate(&grid, particles, n);
+	for (int i = 0; i < n; ++i)
+	{
+		grid_add(&grid, &particles[i], i);
+	}
 	
 	// Simulate a number of time steps
 	double simulation_time = read_timer( );
@@ -52,6 +55,7 @@ int main( int argc, char **argv )
 			// Reset acceleration
 			particles[i].ax = particles[i].ay = 0;
 
+            // Use the grid to traverse neighbours
 			int gx = grid_coord(particles[i].x);
 			int gy = grid_coord(particles[i].y);
 
@@ -77,7 +81,10 @@ int main( int argc, char **argv )
 		grid_clear(&grid);
 
 		// Re-populate grid
-		grid_populate(&grid, particles, n);
+		for (int i = 0; i < n; ++i)
+		{
+			grid_add(&grid, &particles[i], i);
+		}
 
 		// Save if necessary
 		if( fsave && (step%SAVEFREQ) == 0 )

@@ -40,6 +40,7 @@ void *thread_routine( void *pthread_id )
             // Reset acceleration
             particles[i].ax = particles[i].ay = 0;
 
+            // Use the grid to traverse neighbours
             int gx = grid_coord(particles[i].x);
             int gy = grid_coord(particles[i].y);
 
@@ -62,11 +63,14 @@ void *thread_routine( void *pthread_id )
             move( particles[i] );
         
         // Reset grid
-        grid_clear(&grid);
+        if (thread_id == 0)
+            grid_clear(&grid);
+
+        pthread_barrier_wait( &barrier );
 
         // Re-populate grid
-        grid_populate(&grid, particles, n);
-
+        for(int i = first; i < last; i++)
+            grid_add(&grid, &particles[i], i);
 
         pthread_barrier_wait( &barrier );
         
@@ -100,10 +104,11 @@ int main( int argc, char **argv )
     n_threads = read_int( argc, argv, "-p", 2 );
     char *savename = read_string( argc, argv, "-o", NULL );
     
+
     //
     //  allocate resources
     //
-    fsave = savename ? fopen( savename, "w" ) : stdout;
+    fsave = savename ? fopen( savename, "w" ) : NULL;
 
     particles = (particle_t*) malloc( n * sizeof(particle_t) );
     double size = set_size( n );
@@ -114,7 +119,10 @@ int main( int argc, char **argv )
     std::vector<int> tmp[gridSize*gridSize];
     grid.v = tmp;
     grid_init(&grid, gridSize);
-    grid_populate(&grid, particles, n);
+    for (int i = 0; i < n; ++i)
+    {
+        grid_add(&grid, &particles[i], i);
+    }
     
     pthread_attr_t attr;
     P( pthread_attr_init( &attr ) );

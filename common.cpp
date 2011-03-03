@@ -113,18 +113,27 @@ void grid_init(grid_t * grid, int size)
 }
 
 //
-// populates a grid with particles
-// note: it's assumed the grid is empty to begin with.
+// populates a grid with particles openmp style
 //
-void grid_populate(grid_t * grid, particle_t * particles, int n)
+void grid_omp_populate(grid_t * grid, particle_t * particles, int n)
 {
+	#pragma omp for
 	for (int i = 0; i < n; ++i)
 	{
 		int gridx = grid_coord(particles[i].x);
 		int gridy = grid_coord(particles[i].y);
 
+		#pragma omp critical
 		grid->v[gridx * grid->size + gridy].push_back(i);
 	}
+}
+
+void grid_add(grid_t * grid, particle_t * p, int pid)
+{
+	int gridx = grid_coord(p->x);
+	int gridy = grid_coord(p->y);
+
+	grid->v[gridx * grid->size + gridy].push_back(pid);
 }
 
 //
@@ -132,6 +141,16 @@ void grid_populate(grid_t * grid, particle_t * particles, int n)
 //
 void grid_clear(grid_t * grid)
 {
+	for(int i = 0; i < grid->size; i++)
+	for(int j = 0; j < grid->size; j++)
+		grid->v[i * grid->size + j].clear();
+}
+//
+// clears a grid from values openmp style
+//
+void grid_omp_clear(grid_t * grid)
+{
+	#pragma omp for collapse(2)
 	for(int i = 0; i < grid->size; i++)
 	for(int j = 0; j < grid->size; j++)
 		grid->v[i * grid->size + j].clear();
