@@ -13,6 +13,7 @@ int n, n_threads;
 particle_t *particles;
 FILE *fsave;
 pthread_barrier_t barrier;
+grid_t grid;
 
 //
 //  check that pthreads routine call was successful
@@ -27,37 +28,49 @@ void *thread_routine( void *pthread_id )
     int thread_id = *(int*)pthread_id;
 
     int particles_per_thread = (n + n_threads - 1) / n_threads;
-    int first = min(  thread_id    * particles_per_thread, n );
-    int last  = min( (thread_id+1) * particles_per_thread, n );
+    int first = Min(  thread_id    * particles_per_thread, n );
+    int last  = Min( (thread_id+1) * particles_per_thread, n );
     
-    //
-    //  simulate a number of time steps
-    //
+    // Simulate a number of time steps
     for( int step = 0; step < NSTEPS; step++ )
     {
-        //
-        //  compute forces
-        //
+        // Compute forces
         for( int i = first; i < last; i++ )
         {
+            // Reset acceleration
             particles[i].ax = particles[i].ay = 0;
-            for (int j = 0; j < n; j++ )
-                apply_force( particles[i], particles[j] );
+
+            int gx = grid_coord(particles[i].x);
+            int gy = grid_coord(particles[i].y);
+
+            for(int x = Max(gx - 1, 0); x <= Min(gx + 1, grid.size-1); x++)
+            {
+                for(int y = Max(gy - 1, 0); y <= Min(gy + 1, grid.size-1); y++)
+                {
+                    for(int p = 0; p < grid.v[x * grid.size + y].size(); p++)
+                    {
+                        apply_force(particles[i], particles[grid.v[x * grid.size + y][p]]);
+                    }
+                }
+            }
         }
         
         pthread_barrier_wait( &barrier );
         
-        //
-        //  move particles
-        //
+        //  Move particles
         for( int i = first; i < last; i++ ) 
             move( particles[i] );
         
+        // Reset grid
+        grid_clear(&grid);
+
+        // Re-populate grid
+        grid_populate(&grid, particles, n);
+
+
         pthread_barrier_wait( &barrier );
         
-        //
-        //  save if necessary
-        //
+        // Save if necessary
         if( thread_id == 0 && fsave && (step%SAVEFREQ) == 0 )
             save( fsave, n, particles );
     }
@@ -90,31 +103,18 @@ int main( int argc, char **argv )
     //
     //  allocate resources
     //
-    fsave = savename ? fopen( savename, "w" ) : NULL;
+    fsave = savename ? fopen( savename, "w" ) : stdout;
 
     particles = (particle_t*) malloc( n * sizeof(particle_t) );
-    set_size( n );
+    double size = set_size( n );
     init_particles( n, particles );
 
     // Create a grid for optimizing the interactions
     int gridSize = (size/cutoff) + 1; // TODO: Rounding errors?
-    vector<int> grid[gridSize][gridSize];
-
-    for(int i = 0; i < gridSize; i++)
-    for(int j = 0; j < gridSize; j++)
-        grid[i][j] = vector<int>();
-
-#if DEBUG
-    printf("Creating grid of size %dx%d...\n", gridSize, gridSize); fflush(stdout);
-#endif
-
-    for(int i = 0; i < n; i++)
-    {
-        particle_t * p = &particles[i];
-        int gridx = gridCoord(p->x);
-        int gridy = gridCoord(p->y);
-        grid[gridx][gridy].push_back(i);
-    }
+    std::vector<int> tmp[gridSize*gridSize];
+    grid.v = tmp;
+    grid_init(&grid, gridSize);
+    grid_populate(&grid, particles, n);
     
     pthread_attr_t attr;
     P( pthread_attr_init( &attr ) );
