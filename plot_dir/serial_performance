@@ -1,101 +1,100 @@
-n = 0, simulation time = 6.6e-05 seconds
-n = 10, simulation time = 0.006206 seconds
-n = 20, simulation time = 0.013082 seconds
-n = 30, simulation time = 0.008865 seconds
-n = 40, simulation time = 0.012222 seconds
-n = 50, simulation time = 0.014169 seconds
-n = 60, simulation time = 0.037312 seconds
-n = 70, simulation time = 0.041647 seconds
-n = 80, simulation time = 0.049006 seconds
-n = 90, simulation time = 0.053896 seconds
-n = 100, simulation time = 0.060513 seconds
-n = 110, simulation time = 0.066323 seconds
-n = 120, simulation time = 0.073933 seconds
-n = 130, simulation time = 0.036911 seconds
-n = 140, simulation time = 0.04771 seconds
-n = 150, simulation time = 0.04106 seconds
-n = 160, simulation time = 0.052669 seconds
-n = 170, simulation time = 0.04701 seconds
-n = 180, simulation time = 0.050353 seconds
-n = 190, simulation time = 0.048919 seconds
-n = 200, simulation time = 0.121557 seconds
-n = 210, simulation time = 0.05401 seconds
-n = 220, simulation time = 0.056424 seconds
-n = 230, simulation time = 0.058895 seconds
-n = 240, simulation time = 0.06056 seconds
-n = 250, simulation time = 0.062666 seconds
-n = 260, simulation time = 0.065295 seconds
-n = 270, simulation time = 0.069051 seconds
-n = 280, simulation time = 0.070616 seconds
-n = 290, simulation time = 0.072489 seconds
-n = 300, simulation time = 0.075319 seconds
-n = 310, simulation time = 0.078368 seconds
-n = 320, simulation time = 0.079335 seconds
-n = 330, simulation time = 0.092019 seconds
-n = 340, simulation time = 0.09422 seconds
-n = 350, simulation time = 0.096895 seconds
-n = 360, simulation time = 0.099688 seconds
-n = 370, simulation time = 0.102383 seconds
-n = 380, simulation time = 0.102757 seconds
-n = 390, simulation time = 0.109983 seconds
-n = 400, simulation time = 0.108692 seconds
-n = 410, simulation time = 0.112811 seconds
-n = 420, simulation time = 0.267082 seconds
-n = 430, simulation time = 0.287019 seconds
-n = 440, simulation time = 0.296022 seconds
-n = 450, simulation time = 0.300516 seconds
-n = 460, simulation time = 0.115591 seconds
-n = 470, simulation time = 0.279398 seconds
-n = 480, simulation time = 0.121865 seconds
-n = 490, simulation time = 0.292187 seconds
-n = 500, simulation time = 0.305402 seconds
-n = 510, simulation time = 0.323327 seconds
-n = 520, simulation time = 0.316029 seconds
-n = 530, simulation time = 0.146695 seconds
-n = 540, simulation time = 0.361892 seconds
-n = 550, simulation time = 0.36365 seconds
-n = 560, simulation time = 0.373849 seconds
-n = 570, simulation time = 0.154636 seconds
-n = 580, simulation time = 0.153821 seconds
-n = 590, simulation time = 0.160464 seconds
-n = 600, simulation time = 0.157709 seconds
-n = 610, simulation time = 0.162796 seconds
-n = 620, simulation time = 0.168276 seconds
-n = 630, simulation time = 0.166876 seconds
-n = 640, simulation time = 0.164339 seconds
-n = 650, simulation time = 0.17095 seconds
-n = 660, simulation time = 0.404626 seconds
-n = 670, simulation time = 0.180761 seconds
-n = 680, simulation time = 0.185505 seconds
-n = 690, simulation time = 0.18625 seconds
-n = 700, simulation time = 0.448104 seconds
-n = 710, simulation time = 0.474623 seconds
-n = 720, simulation time = 0.205305 seconds
-n = 730, simulation time = 0.474198 seconds
-n = 740, simulation time = 0.451165 seconds
-n = 750, simulation time = 0.457988 seconds
-n = 760, simulation time = 0.483899 seconds
-n = 770, simulation time = 0.486717 seconds
-n = 780, simulation time = 0.213239 seconds
-n = 790, simulation time = 0.514964 seconds
-n = 800, simulation time = 0.221083 seconds
-n = 810, simulation time = 0.215764 seconds
-n = 820, simulation time = 0.21802 seconds
-n = 830, simulation time = 0.528708 seconds
-n = 840, simulation time = 0.550883 seconds
-n = 850, simulation time = 0.460202 seconds
-n = 860, simulation time = 0.407535 seconds
-n = 870, simulation time = 0.233331 seconds
-n = 880, simulation time = 0.548369 seconds
-n = 890, simulation time = 0.241882 seconds
-n = 900, simulation time = 0.58008 seconds
-n = 910, simulation time = 0.244443 seconds
-n = 920, simulation time = 0.600892 seconds
-n = 930, simulation time = 0.603678 seconds
-n = 940, simulation time = 0.648488 seconds
-n = 950, simulation time = 0.530168 seconds
-n = 960, simulation time = 0.412605 seconds
-n = 970, simulation time = 0.602822 seconds
-n = 980, simulation time = 0.608308 seconds
-n = 990, simulation time = 0.282888 seconds
-n = 1000, simulation time = 0.290261 seconds
+0.005523
+0.007608
+0.010614
+0.02346
+0.024979
+0.03966
+0.02306
+0.051789
+0.025711
+0.028139
+0.066236
+0.073803
+0.038032
+0.082936
+0.088579
+0.043145
+0.048606
+0.051858
+0.05181
+0.128975
+0.126231
+0.143422
+0.066355
+0.086089
+0.129701
+0.076343
+0.07841
+0.078385
+0.085301
+0.088229
+0.083268
+0.084728
+0.175483
+0.086308
+0.100378
+0.103171
+0.095923
+0.106789
+0.112689
+0.109432
+0.112136
+0.114137
+0.120136
+0.116459
+0.123808
+0.290443
+0.132108
+0.138008
+0.144235
+0.141795
+0.143673
+0.254984
+0.147353
+0.141835
+0.154871
+0.154673
+0.15979
+0.164472
+0.16722
+0.353061
+0.354696
+0.369602
+0.18466
+0.427529
+0.182411
+0.184255
+0.383437
+0.192229
+0.19886
+0.199061
+0.204324
+0.213499
+0.204628
+0.405921
+0.217813
+0.214319
+0.478517
+0.211063
+0.232203
+0.230724
+0.492087
+0.303197
+0.513485
+0.509731
+0.53531
+0.233502
+0.238901
+0.244188
+0.542645
+0.245632
+0.263881
+0.266986
+0.263607
+0.595194
+0.272151
+0.271304
+0.289639
+0.286178
+0.274368
+0.595912
