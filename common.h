@@ -1,6 +1,8 @@
 #ifndef __CS_COMMON_H__
 #define __CS_COMMON_H__
 
+#include <vector>
+
 //
 //  tuned constants
 //
@@ -33,6 +35,13 @@ typedef struct
   double ay;
 } particle_t;
 
+
+typedef struct
+{
+	int size;
+	std::vector<int> * v;
+} grid_t;
+
 //
 //  timing routines
 //
@@ -45,6 +54,15 @@ double set_size( int n );
 void init_particles( int n, particle_t *p );
 void apply_force( particle_t &particle, particle_t &neighbor );
 void move( particle_t &p );
+
+
+//
+// grid routines
+//
+void grid_init(grid_t * grid, int gridsize);
+void grid_clear(grid_t * grid);
+void grid_populate(grid_t * grid, particle_t * particles, int n);
+int grid_coord(double c);
 
 //
 //  I/O routines

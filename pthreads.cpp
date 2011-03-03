@@ -96,6 +96,26 @@ int main( int argc, char **argv )
     set_size( n );
     init_particles( n, particles );
 
+    // Create a grid for optimizing the interactions
+    int gridSize = (size/cutoff) + 1; // TODO: Rounding errors?
+    vector<int> grid[gridSize][gridSize];
+
+    for(int i = 0; i < gridSize; i++)
+    for(int j = 0; j < gridSize; j++)
+        grid[i][j] = vector<int>();
+
+#if DEBUG
+    printf("Creating grid of size %dx%d...\n", gridSize, gridSize); fflush(stdout);
+#endif
+
+    for(int i = 0; i < n; i++)
+    {
+        particle_t * p = &particles[i];
+        int gridx = gridCoord(p->x);
+        int gridy = gridCoord(p->y);
+        grid[gridx][gridy].push_back(i);
+    }
+    
     pthread_attr_t attr;
     P( pthread_attr_init( &attr ) );
     P( pthread_barrier_init( &barrier, NULL, n_threads ) );

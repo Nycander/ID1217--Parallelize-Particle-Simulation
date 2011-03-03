@@ -102,6 +102,50 @@ void init_particles( int n, particle_t *p )
 }
 
 //
+// initialize grid and fill it with particles
+// 
+void grid_init(grid_t * grid, int size)
+{
+	grid->size = size;
+	for(int i = 0; i < size; i++)
+	for(int j = 0; j < size; j++)
+		grid->v[i * size + j] = std::vector<int>();
+}
+
+//
+// populates a grid with particles
+// note: it's assumed the grid is empty to begin with.
+//
+void grid_populate(grid_t * grid, particle_t * particles, int n)
+{
+	for (int i = 0; i < n; ++i)
+	{
+		int gridx = grid_coord(particles[i].x);
+		int gridy = grid_coord(particles[i].y);
+
+		grid->v[gridx * grid->size + gridy].push_back(i);
+	}
+}
+
+//
+// clears a grid from values
+//
+void grid_clear(grid_t * grid)
+{
+	for(int i = 0; i < grid->size; i++)
+	for(int j = 0; j < grid->size; j++)
+		grid->v[i * grid->size + j].clear();
+}
+
+//
+// Calculate the grid coordinate from a real coordinate
+//
+int grid_coord(double c)
+{
+	return c / cutoff;
+}
+
+//
 //  interact two particles
 //
 void apply_force( particle_t &particle, particle_t &neighbor )
