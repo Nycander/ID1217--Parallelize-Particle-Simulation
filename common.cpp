@@ -137,20 +137,41 @@ void grid_add(grid_t * grid, particle_t * p, int pid)
 }
 
 //
+// grid move
+//
+void grid_remove(grid_t * grid, particle_t * p, int pid)
+{
+	int grid_x = grid_coord(p->x);
+	int grid_y = grid_coord(p->y);
+	int gridCoord = grid_x * grid->size + grid_y;
+
+	// Remove particle from grid slot
+	particle_t * particle;
+	for (int i = 0; i < grid->v[gridCoord].size(); ++i)
+	{
+		if (grid->v[gridCoord][i] == pid)
+		{
+			grid->v[gridCoord].erase(grid->v[gridCoord].begin() + i);
+			break;
+		}
+	}
+}
+
+//
 // clears a grid from values
 //
 void grid_clear(grid_t * grid)
 {
 	for(int i = 0; i < grid->size; i++)
-	for(int j = 0; j < grid->size; j++)
-		grid->v[i * grid->size + j].clear();
+		for(int j = 0; j < grid->size; j++)
+			grid->v[i * grid->size + j].clear();
 }
 //
 // clears a grid from values openmp style
 //
 void grid_omp_clear(grid_t * grid)
 {
-	#pragma omp for collapse(2)
+	#pragma omp for
 	for(int i = 0; i < grid->size; i++)
 	for(int j = 0; j < grid->size; j++)
 		grid->v[i * grid->size + j].clear();

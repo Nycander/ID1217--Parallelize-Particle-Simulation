@@ -73,7 +73,9 @@ int main( int argc, char **argv )
         // Move particles
         #pragma omp for
         for( int i = 0; i < n; i++ ) 
+        {
             move( particles[i] );
+        }
 
         // Reset grid
         grid_omp_clear(&grid);

@@ -2,7 +2,7 @@
 # Computers with Red Hat Enterprise Linux 5 in the computer room 648, KTH Forum, Kista
 #
 CC = g++
-MPCC =  mpicc -cc=gcc
+MPCC =  mpicc -cc=g++44
 
 TARGETS = serial pthreads openmp mpi
 
@@ -15,7 +15,7 @@ pthreads:
 openmp:
 	$(CC) -O3 -o $@ openmp.cpp common.cpp -lm -fopenmp
 mpi:
-	$(CC) -O3 -o $@ mpi.cpp common.cpp -lmpicxx -lmpi
+	$(MPCC) -O3 -o $@ mpi.cpp common.cpp -lm
 
 clean:
 	rm -f *.o $(TARGETS)

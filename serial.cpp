@@ -33,7 +33,6 @@ int main( int argc, char **argv )
 	double size = set_size( n );
 	init_particles( n, particles );
 
-
 	// Create a grid for optimizing the interactions
 	int gridSize = (size/cutoff) + 1; // TODO: Rounding errors?
 	std::vector<int> tmp[gridSize*gridSize];
@@ -70,20 +69,16 @@ int main( int argc, char **argv )
 				}
 			}
 		}
+
 	
 		// Move particles
 		for( int i = 0; i < n; i++ ) 
 		{
-			move( particles[i] );
-		}
+            grid_remove(&grid, &particles[i], i);
 
-		// Reset grid
-		grid_clear(&grid);
+            move( particles[i] );
 
-		// Re-populate grid
-		for (int i = 0; i < n; ++i)
-		{
-			grid_add(&grid, &particles[i], i);
+            grid_add(&grid, &particles[i], i);
 		}
 
 		// Save if necessary
