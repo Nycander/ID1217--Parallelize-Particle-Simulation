@@ -4,5 +4,5 @@ set terminal pdfcairo #enhanced "Helvetica" 16
 
 
 set log y
-plot "plot_dir/serial.dat" using 1:2 with lines\
-    title "serial"
+plot "plot_dir/pthreads.dat" using 1:2 with lines\
+    title "pthreads"
