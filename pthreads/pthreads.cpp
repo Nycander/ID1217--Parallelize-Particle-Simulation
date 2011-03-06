@@ -15,7 +15,6 @@ FILE *fsave;
 pthread_barrier_t barrier;
 grid_t grid;
 
-
 //
 //  check that pthreads routine call was successful
 //
@@ -32,7 +31,7 @@ void *thread_routine( void *pthread_id )
     int first = Min(  thread_id    * particles_per_thread, n );
     int last  = Min( (thread_id+1) * particles_per_thread, n );
 
-    //printf("Thread %d running. Particles %d -> %d\n", thread_id, first, last);
+   // printf("Thread %d running, particles %d -> %d.\n", thread_id, first, last);
 
     // Simulate a number of time steps
     for( int step = 0; step < NSTEPS; step++ )
@@ -61,38 +60,36 @@ void *thread_routine( void *pthread_id )
             }
         }
         
-        pthread_barrier_wait( &barrier );
-
-        if (thread_id == 0)
-        {
-            int size = grid.size;
-            grid_clear(grid);
-            grid_init(grid, size);
-        }
-
-        pthread_barrier_wait( &barrier );
+        pthread_barrier_wait( &barrier );        
         
         //  Move particles
         for( int i = first; i < last; i++ ) 
         {
+            if (! grid_remove(grid, &particles[i]))
+            {
+                fprintf(stdout, "Error: Failed to remove particle '%p'. Code must be faulty. Blame source writer.\n", &particles[i]);
+                exit(3);
+            }
+
             move(particles[i]);
+
+            grid_add(grid, &particles[i]);
         }
 
         pthread_barrier_wait( &barrier );
-        
-        // Recalculate grid
-        if (thread_id == 0)
-        {
-            for (int i = 0; i < n; ++i)
-            {
-                grid_add(grid, &particles[i]);
-            }
-        }
 
         // Save if necessary
         if( thread_id == 0 && fsave && (step%SAVEFREQ) == 0 )
             save( fsave, n, particles );
     }
+
+    #if DEBUG
+    if (thread_id == 0)
+    {
+        // Double-check size of n against grid size
+        printf("n = %d, grid.n = %d\n", n, grid_size(grid));
+    }
+    #endif
     
     return NULL;
 }
@@ -150,6 +147,8 @@ int main( int argc, char **argv )
     //  do the parallel work
     //
     double simulation_time = read_timer( );
+
+
     for( int i = 1; i < n_threads; i++ ) 
         P( pthread_create( &threads[i], &attr, thread_routine, &thread_ids[i] ) );
     
