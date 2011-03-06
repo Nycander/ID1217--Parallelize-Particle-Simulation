@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "common.h"
+#include "grid.h"
 
 #define DEBUG 0
 using namespace std;
@@ -35,13 +36,11 @@ int main( int argc, char **argv )
 
 	// Create a grid for optimizing the interactions
 	int gridSize = (size/cutoff) + 1; // TODO: Rounding errors?
-	std::vector<int> tmp[gridSize*gridSize];
 	grid_t grid;
-	grid.v = tmp;
-	grid_init(&grid, gridSize);
+	grid_init(grid, gridSize);
 	for (int i = 0; i < n; ++i)
 	{
-		grid_add(&grid, &particles[i], i);
+		grid_add(grid, &particles[i]);
 	}
 	
 	// Simulate a number of time steps
@@ -62,9 +61,11 @@ int main( int argc, char **argv )
 			{
 				for(int y = Max(gy - 1, 0); y <= Min(gy + 1, gridSize-1); y++)
 				{
-                    for(int p = 0; p < grid.v[x * grid.size + y].size(); p++)
+					linkedlist_t * curr = grid.grid[x * grid.size + y];
+					while(curr != 0)
                     {
-                        apply_force(particles[i], particles[grid.v[x * grid.size + y][p]]);
+                        apply_force(particles[i], *(curr->value));
+                        curr = curr->next;
                     }
 				}
 			}
@@ -74,11 +75,11 @@ int main( int argc, char **argv )
 		// Move particles
 		for( int i = 0; i < n; i++ ) 
 		{
-            grid_remove(&grid, &particles[i], i);
+            grid_remove(grid, &particles[i]);
 
-            move( particles[i] );
+            move(particles[i]);
 
-            grid_add(&grid, &particles[i], i);
+            grid_add(grid, &particles[i]);
 		}
 
 		// Save if necessary
@@ -89,6 +90,7 @@ int main( int argc, char **argv )
 	
 	printf( "n = %d, simulation time = %g seconds\n", n, simulation_time );
 	
+	grid_clear(grid);
 	free( particles );
 	if( fsave )
 		fclose( fsave );

@@ -60,17 +60,19 @@ void *thread_routine( void *pthread_id )
         
         //  Move particles
         for( int i = first; i < last; i++ ) 
-            move( particles[i] );
-        
-        // Reset grid
-        if (thread_id == 0)
-            grid_clear(&grid);
+        {
+            grid_remove(&grid, &particles[i], i);
 
+            move( particles[i] );
+
+            grid_add(&grid, &particles[i], i);
+        }
+        
         pthread_barrier_wait( &barrier );
 
         // Re-populate grid
         for(int i = first; i < last; i++)
-            grid_add(&grid, &particles[i], i);
+            grid_add(grid, &particles[i], i);
 
         pthread_barrier_wait( &barrier );
         
