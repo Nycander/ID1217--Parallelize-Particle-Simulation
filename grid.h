@@ -14,7 +14,7 @@ typedef struct linkedlist linkedlist_t;
 struct grid
 {
 	int size;
-	linkedlist_t * * grid;
+	linkedlist_t ** grid;
 };
 
 typedef struct grid grid_t;

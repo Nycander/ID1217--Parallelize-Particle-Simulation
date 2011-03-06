@@ -5,6 +5,7 @@
 #include <pthread.h>
 
 #include "common.h"
+#include "grid.h"
 
 //
 //  global variables
@@ -30,7 +31,7 @@ void *thread_routine( void *pthread_id )
     int particles_per_thread = (n + n_threads - 1) / n_threads;
     int first = Min(  thread_id    * particles_per_thread, n );
     int last  = Min( (thread_id+1) * particles_per_thread, n );
-    
+
     // Simulate a number of time steps
     for( int step = 0; step < NSTEPS; step++ )
     {
@@ -43,14 +44,17 @@ void *thread_routine( void *pthread_id )
             // Use the grid to traverse neighbours
             int gx = grid_coord(particles[i].x);
             int gy = grid_coord(particles[i].y);
+            printf("HEJ\n"); fflush(stdout);
 
             for(int x = Max(gx - 1, 0); x <= Min(gx + 1, grid.size-1); x++)
             {
                 for(int y = Max(gy - 1, 0); y <= Min(gy + 1, grid.size-1); y++)
                 {
-                    for(unsigned int p = 0; p < grid.v[x * grid.size + y].size(); p++)
+                    linkedlist_t * curr = grid.grid[x * grid.size + y];
+                    while(curr != 0)
                     {
-                        apply_force(particles[i], particles[grid.v[x * grid.size + y][p]]);
+                        apply_force(particles[i], *(curr->value));
+                        curr = curr->next;
                     }
                 }
             }
@@ -61,18 +65,12 @@ void *thread_routine( void *pthread_id )
         //  Move particles
         for( int i = first; i < last; i++ ) 
         {
-            grid_remove(&grid, &particles[i], i);
+            grid_remove(grid, &particles[i]);
 
-            move( particles[i] );
+            move(particles[i]);
 
-            grid_add(&grid, &particles[i], i);
+            grid_add(grid, &particles[i]);
         }
-        
-        pthread_barrier_wait( &barrier );
-
-        // Re-populate grid
-        for(int i = first; i < last; i++)
-            grid_add(grid, &particles[i], i);
 
         pthread_barrier_wait( &barrier );
         
@@ -117,17 +115,12 @@ int main( int argc, char **argv )
     init_particles( n, particles );
 
     // Create a grid for optimizing the interactions
-    int gridSize = (int)(size/cutoff) + 1; // TODO: Rounding errors?
-	std::vector<std::vector<int>> tmp = std::vector<std::vector<int>>();
-	for(int i = 0; i < size*size; i++)
-	{
-		tmp.push_back(std::vector<int>());
-	}
-	grid.size = gridSize;
-    grid.v = tmp;
+    int gridSize = (size/cutoff) + 1; // TODO: Rounding errors?
+    grid_t grid;
+    grid_init(grid, gridSize);
     for (int i = 0; i < n; ++i)
     {
-        grid_add(&grid, &particles[i], i);
+        grid_add(grid, &particles[i]);
     }
     
     pthread_attr_t attr;
@@ -162,6 +155,7 @@ int main( int argc, char **argv )
     P( pthread_attr_destroy( &attr ) );
     free( thread_ids );
     free( threads );
+    grid_clear(grid);
     free( particles );
     if( fsave )
         fclose( fsave );

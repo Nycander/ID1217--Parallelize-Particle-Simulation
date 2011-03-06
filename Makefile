@@ -6,7 +6,7 @@ MPCC =  mpicc -cc=g++44
 
 TARGETS = serial pthreads openmp mpi
 
-all:	serial
+all:	serial pthreads openmp
 
 serial:
 	$(CC) -O3 -o $@ -lm serial.cpp common.cpp grid.cpp

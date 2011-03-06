@@ -15,6 +15,15 @@
 inline int Min( int a, int b ) { return a < b ? a : b; }
 inline int Max( int a, int b ) { return a > b ? a : b; }
 
+/*
+#if defined(_WIN32) || defined(_WIN64)
+#define fmax max
+#define fmin min
+#pragma warning (disable:4996)
+#define snprintf sprintf_s
+#endif
+*/
+
 //
 //  saving parameters
 //
