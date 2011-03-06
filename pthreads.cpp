@@ -14,7 +14,7 @@ particle_t *particles;
 FILE *fsave;
 pthread_barrier_t barrier;
 grid_t grid;
-pthread_mutex_t grid_lock = PTHREAD_MUTEX_INITIALIZER;
+
 
 //
 //  check that pthreads routine call was successful
@@ -31,6 +31,8 @@ void *thread_routine( void *pthread_id )
     int particles_per_thread = (n + n_threads - 1) / n_threads;
     int first = Min(  thread_id    * particles_per_thread, n );
     int last  = Min( (thread_id+1) * particles_per_thread, n );
+
+    printf("Thread %d running. Particles %d -> %d\n", thread_id, first, last);
 
     // Simulate a number of time steps
     for( int step = 0; step < NSTEPS; step++ )
@@ -60,23 +62,34 @@ void *thread_routine( void *pthread_id )
         }
         
         pthread_barrier_wait( &barrier );
-        
-        //  Move particles
-        for( int i = first; i < last; i++ ) 
+
+        if (thread_id == 0)
         {
-            pthread_mutex_lock(&grid_lock);
-            grid_remove(grid, &particles[i]);
-            pthread_mutex_unlock(&grid_lock);
-
-            move(particles[i]);
-
-            pthread_mutex_lock(&grid_lock);
-            grid_add(grid, &particles[i]);
-            pthread_mutex_unlock(&grid_lock);
+            for (int i = 0; i < n; ++i)
+            {
+                grid_remove(grid, &particles[i]);
+            }
         }
 
         pthread_barrier_wait( &barrier );
         
+        //  Move particles
+        for( int i = first; i < last; i++ ) 
+        {
+            move(particles[i]);
+        }
+
+        pthread_barrier_wait( &barrier );
+        
+        // Recalculate grid
+        if (thread_id == 0)
+        {
+            for (int i = 0; i < n; ++i)
+            {
+                grid_add(grid, &particles[i]);
+            }
+        }
+
         // Save if necessary
         if( thread_id == 0 && fsave && (step%SAVEFREQ) == 0 )
             save( fsave, n, particles );
