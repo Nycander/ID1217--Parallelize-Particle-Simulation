@@ -40,17 +40,20 @@ void grid_add(grid_t & grid, particle_t * p)
 
     int gridCoord = gridx * grid.size + gridy;
 
-    linkedlist_t * tmp = grid.grid[gridCoord];
-
     linkedlist_t * newElement = (linkedlist_t *) malloc(sizeof(linkedlist));
-    newElement->next = tmp;
     newElement->value = p;
 
+    // Beginning of critical section
+    linkedlist_t * tmp = grid.grid[gridCoord];
+
+    newElement->next = tmp;
+
     grid.grid[gridCoord] = newElement;
+    // End of critical section
 }
 
 //
-// grid move
+// grid remove
 //
 bool grid_remove(grid_t & grid, particle_t * p)
 {

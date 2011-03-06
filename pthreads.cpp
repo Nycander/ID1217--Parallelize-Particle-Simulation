@@ -32,7 +32,7 @@ void *thread_routine( void *pthread_id )
     int first = Min(  thread_id    * particles_per_thread, n );
     int last  = Min( (thread_id+1) * particles_per_thread, n );
 
-    printf("Thread %d running. Particles %d -> %d\n", thread_id, first, last);
+    //printf("Thread %d running. Particles %d -> %d\n", thread_id, first, last);
 
     // Simulate a number of time steps
     for( int step = 0; step < NSTEPS; step++ )
@@ -65,10 +65,9 @@ void *thread_routine( void *pthread_id )
 
         if (thread_id == 0)
         {
-            for (int i = 0; i < n; ++i)
-            {
-                grid_remove(grid, &particles[i]);
-            }
+            int size = grid.size;
+            grid_clear(grid);
+            grid_init(grid, size);
         }
 
         pthread_barrier_wait( &barrier );
@@ -136,7 +135,7 @@ int main( int argc, char **argv )
     {
         grid_add(grid, &particles[i]);
     }
-    
+
     pthread_attr_t attr;
     P( pthread_attr_init( &attr ) );
     P( pthread_barrier_init( &barrier, NULL, n_threads ) );
