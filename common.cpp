@@ -6,7 +6,11 @@
 #include <math.h>
 #include <time.h>
 #include <limits.h>
+#ifndef _WIN32
 #include <sys/time.h>
+#else
+#include "gettimeofday.h"
+#endif
 
 #include "common.h"
 
@@ -104,12 +108,17 @@ void init_particles( int n, particle_t *p )
 //
 // initialize grid and fill it with particles
 // 
-void grid_init(grid_t * grid, int size)
+void grid_init(grid_t & grid, int size)
 {
-	grid->size = size;
+	grid.size = size;
 	for(int i = 0; i < size; i++)
-	for(int j = 0; j < size; j++)
-		grid->v[i * size + j] = std::vector<int>();
+	{
+		for(int j = 0; j < size; j++)
+		{
+			std::vector<int> hej;
+			grid.v[(i * size) + j] = hej;
+		}
+	}
 }
 
 //
@@ -128,30 +137,30 @@ void grid_omp_populate(grid_t * grid, particle_t * particles, int n)
 	}
 }
 
-void grid_add(grid_t * grid, particle_t * p, int pid)
+void grid_add(grid_t & grid, particle_t * p, int pid)
 {
 	int gridx = grid_coord(p->x);
 	int gridy = grid_coord(p->y);
 
-	grid->v[gridx * grid->size + gridy].push_back(pid);
+	grid.v[gridx * grid.size + gridy].push_back(pid);
 }
 
 //
 // grid move
 //
-void grid_remove(grid_t * grid, particle_t * p, int pid)
+void grid_remove(grid_t & grid, particle_t * p, int pid)
 {
 	int grid_x = grid_coord(p->x);
 	int grid_y = grid_coord(p->y);
-	int gridCoord = grid_x * grid->size + grid_y;
+	int gridCoord = grid_x * grid.size + grid_y;
 
 	// Remove particle from grid slot
 	particle_t * particle;
-	for (int i = 0; i < grid->v[gridCoord].size(); ++i)
+	for (unsigned int i = 0; i < grid.v[gridCoord].size(); ++i)
 	{
-		if (grid->v[gridCoord][i] == pid)
+		if (grid.v[gridCoord][i] == pid)
 		{
-			grid->v[gridCoord].erase(grid->v[gridCoord].begin() + i);
+			grid.v[gridCoord].erase(grid.v[gridCoord].begin() + i, grid.v[gridCoord].begin() + i + 1);
 			break;
 		}
 	}
@@ -182,7 +191,7 @@ void grid_omp_clear(grid_t * grid)
 //
 int grid_coord(double c)
 {
-	return c / cutoff;
+	return (int)(c / cutoff);
 }
 
 //

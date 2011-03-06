@@ -12,6 +12,13 @@
 #define min_r   (cutoff/100)
 #define dt      0.0005
 
+#if defined(_WIN32) || defined(_WIN64)
+#define fmax max
+#define fmin min
+#pragma warning (disable:4996)
+#define snprintf sprintf_s
+#endif
+
 inline int Min( int a, int b ) { return a < b ? a : b; }
 inline int Max( int a, int b ) { return a > b ? a : b; }
 
@@ -39,7 +46,7 @@ typedef struct
 typedef struct
 {
 	int size;
-	std::vector<int> * v;
+	std::vector<std::vector<int>> v;
 } grid_t;
 
 //
@@ -59,7 +66,7 @@ void move( particle_t &p );
 //
 // grid routines
 //
-void grid_init(grid_t * grid, int gridsize);
+void grid_init(grid_t & grid, int gridsize);
 void grid_clear(grid_t * grid);
 void grid_add(grid_t * grid, particle_t * particle, int pid);
 void grid_remove(grid_t * grid, particle_t * particles, int pid);

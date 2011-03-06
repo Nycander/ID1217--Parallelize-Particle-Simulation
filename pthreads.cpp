@@ -48,7 +48,7 @@ void *thread_routine( void *pthread_id )
             {
                 for(int y = Max(gy - 1, 0); y <= Min(gy + 1, grid.size-1); y++)
                 {
-                    for(int p = 0; p < grid.v[x * grid.size + y].size(); p++)
+                    for(unsigned int p = 0; p < grid.v[x * grid.size + y].size(); p++)
                     {
                         apply_force(particles[i], particles[grid.v[x * grid.size + y][p]]);
                     }
@@ -115,10 +115,14 @@ int main( int argc, char **argv )
     init_particles( n, particles );
 
     // Create a grid for optimizing the interactions
-    int gridSize = (size/cutoff) + 1; // TODO: Rounding errors?
-    std::vector<int> tmp[gridSize*gridSize];
+    int gridSize = (int)(size/cutoff) + 1; // TODO: Rounding errors?
+	std::vector<std::vector<int>> tmp = std::vector<std::vector<int>>();
+	for(int i = 0; i < size*size; i++)
+	{
+		tmp.push_back(std::vector<int>());
+	}
+	grid.size = gridSize;
     grid.v = tmp;
-    grid_init(&grid, gridSize);
     for (int i = 0; i < n; ++i)
     {
         grid_add(&grid, &particles[i], i);
