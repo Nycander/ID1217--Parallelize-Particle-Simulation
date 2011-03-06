@@ -9,12 +9,12 @@
 
 //
 //  global variables
-//
 int n, n_threads;
 particle_t *particles;
 FILE *fsave;
 pthread_barrier_t barrier;
 grid_t grid;
+pthread_mutex_t grid_lock = PTHREAD_MUTEX_INITIALIZER;
 
 //
 //  check that pthreads routine call was successful
@@ -44,7 +44,6 @@ void *thread_routine( void *pthread_id )
             // Use the grid to traverse neighbours
             int gx = grid_coord(particles[i].x);
             int gy = grid_coord(particles[i].y);
-            printf("HEJ\n"); fflush(stdout);
 
             for(int x = Max(gx - 1, 0); x <= Min(gx + 1, grid.size-1); x++)
             {
@@ -65,11 +64,15 @@ void *thread_routine( void *pthread_id )
         //  Move particles
         for( int i = first; i < last; i++ ) 
         {
+            pthread_mutex_lock(&grid_lock);
             grid_remove(grid, &particles[i]);
+            pthread_mutex_unlock(&grid_lock);
 
             move(particles[i]);
 
+            pthread_mutex_lock(&grid_lock);
             grid_add(grid, &particles[i]);
+            pthread_mutex_unlock(&grid_lock);
         }
 
         pthread_barrier_wait( &barrier );
@@ -84,7 +87,6 @@ void *thread_routine( void *pthread_id )
 
 //
 //  benchmarking program
-//
 int main( int argc, char **argv )
 {    
     //
@@ -116,7 +118,6 @@ int main( int argc, char **argv )
 
     // Create a grid for optimizing the interactions
     int gridSize = (size/cutoff) + 1; // TODO: Rounding errors?
-    grid_t grid;
     grid_init(grid, gridSize);
     for (int i = 0; i < n; ++i)
     {

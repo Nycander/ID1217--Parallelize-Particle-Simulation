@@ -9,7 +9,7 @@
 //
 int grid_coord(double c)
 {
-	return (int)(c / cutoff);
+    return (int)(c / cutoff);
 }
 
 
@@ -18,16 +18,16 @@ int grid_coord(double c)
 // 
 void grid_init(grid_t & grid, int size)
 {
-	grid.size = size;
-	grid.grid = (linkedlist**) malloc(sizeof(linkedlist*) * size * size);
+    grid.size = size;
+    grid.grid = (linkedlist**) malloc(sizeof(linkedlist*) * size * size);
 
-	if (grid.grid == NULL)
-	{
-		fprintf(stderr, "Error: Could not allocate memory for the grid!\n");
-		exit(1);
-	}
+    if (grid.grid == NULL)
+    {
+        fprintf(stderr, "Error: Could not allocate memory for the grid!\n");
+        exit(1);
+    }
 
-	memset(grid.grid, 0, sizeof(linkedlist*) * size * size);
+    memset(grid.grid, 0, sizeof(linkedlist*) * size * size);
 }
 
 //
@@ -35,18 +35,18 @@ void grid_init(grid_t & grid, int size)
 //
 void grid_add(grid_t & grid, particle_t * p)
 {
-	int gridx = grid_coord(p->x);
-	int gridy = grid_coord(p->y);
+    int gridx = grid_coord(p->x);
+    int gridy = grid_coord(p->y);
 
-	int gridCoord = gridx * grid.size + gridy;
-	
-	linkedlist_t * tmp = grid.grid[gridCoord];
+    int gridCoord = gridx * grid.size + gridy;
 
-	linkedlist_t * newElement = (linkedlist_t *) malloc(sizeof(linkedlist));
-	newElement->next = tmp;
-	newElement->value = p;
+    linkedlist_t * tmp = grid.grid[gridCoord];
 
-	grid.grid[gridCoord] = newElement;
+    linkedlist_t * newElement = (linkedlist_t *) malloc(sizeof(linkedlist));
+    newElement->next = tmp;
+    newElement->value = p;
+
+    grid.grid[gridCoord] = newElement;
 }
 
 //
@@ -54,47 +54,47 @@ void grid_add(grid_t & grid, particle_t * p)
 //
 bool grid_remove(grid_t & grid, particle_t * p)
 {
-	int grid_x = grid_coord(p->x);
-	int grid_y = grid_coord(p->y);
-	int gridCoord = grid_x * grid.size + grid_y;
+    int grid_x = grid_coord(p->x);
+    int grid_y = grid_coord(p->y);
+    int gridCoord = grid_x * grid.size + grid_y;
 
-	// Find p in linkedlist
-	linkedlist_t * current = grid.grid[gridCoord];
+    // Find p in linkedlist
+    linkedlist_t * current = grid.grid[gridCoord];
 
-	// No elements?
-	if (current == 0)
-	{
-		return false;
-	}
-	
-	// Special case for size = 1
-	if (current->next == 0)
-	{
-		if (current->value != p)
-		{
-			return false;
-		}
+    // No elements?
+    if (current == 0)
+    {
+        return false;
+    }
 
-		grid.grid[gridCoord] = 0;
-		free(current);
-		return true;
-	}
+    // Special case for size = 1
+    if (current->next == 0)
+    {
+        if (current->value != p)
+        {
+            return false;
+        }
 
-	linkedlist_t * prev = current;
-	current = current->next;
-	while(current != 0)
-	{
-		if (current->value == p)
-		{
-			prev->next = current->next;
-			free(current);
-			return true;
-		}
+        grid.grid[gridCoord] = 0;
+        free(current);
+        return true;
+    }
 
-		prev = current;
-		current = current->next;
-	}
-	return false;
+    linkedlist_t * prev = current;
+    current = current->next;
+    while(current != 0)
+    {
+        if (current->value == p)
+        {
+            prev->next = current->next;
+            free(current);
+            return true;
+        }
+
+        prev = current;
+        current = current->next;
+    }
+    return false;
 }
 
 //
@@ -102,15 +102,15 @@ bool grid_remove(grid_t & grid, particle_t * p)
 //
 void grid_clear(grid_t & grid)
 {
-	for (int i = 0; i < grid.size*grid.size; ++i)
-	{
-		linkedlist_t * curr = grid.grid[i];
-		while(curr != 0)
-		{
-			linkedlist_t * tmp = curr->next;
-			free(curr);
-			curr = tmp;
-		}
-	}
-	free(grid.grid);
+    for (int i = 0; i < grid.size*grid.size; ++i)
+    {
+        linkedlist_t * curr = grid.grid[i];
+        while(curr != 0)
+        {
+            linkedlist_t * tmp = curr->next;
+            free(curr);
+            curr = tmp;
+        }
+    }
+    free(grid.grid);
 }
