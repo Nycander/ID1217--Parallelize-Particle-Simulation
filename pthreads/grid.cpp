@@ -7,15 +7,6 @@
 
 
 //
-// Calculate the grid coordinate from a real coordinate
-//
-int grid_coord(double c)
-{
-    return (int)floor(c / cutoff);
-}
-
-
-//
 // initialize grid and fill it with particles
 // 
 void grid_init(grid_t & grid, int size)
@@ -53,19 +44,14 @@ void grid_init(grid_t & grid, int size)
 //
 void grid_add(grid_t & grid, particle_t * p)
 {
-    int gridx = grid_coord(p->x);
-    int gridy = grid_coord(p->y);
-
-    int gridCoord = gridx * grid.size + gridy;
+    int gridCoord = grid_coord_flat(grid.size, p->x, p->y);
 
     linkedlist_t * newElement = (linkedlist_t *) malloc(sizeof(linkedlist));
     newElement->value = p;
 
     // Beginning of critical section
     pthread_mutex_lock(&grid.lock[gridCoord]);
-    linkedlist_t * tmp = grid.grid[gridCoord];
-
-    newElement->next = tmp;
+    newElement->next = grid.grid[gridCoord];
 
     grid.grid[gridCoord] = newElement;
     // End of critical section
@@ -73,41 +59,32 @@ void grid_add(grid_t & grid, particle_t * p)
 }
 
 //
-// grid remove
+// Removes a particle from a grid
 //
 bool grid_remove(grid_t & grid, particle_t * p)
 {
-    int grid_x = grid_coord(p->x);
-    int grid_y = grid_coord(p->y);
-    int gridCoord = grid_x * grid.size + grid_y;
-
-    // Beginning of critical section
-    pthread_mutex_lock(&grid.lock[gridCoord]);
-
-    linkedlist_t * current = grid.grid[gridCoord];
+    int gridCoord = grid_coord_flat(grid.size, p->x, p->y);
 
     // No elements?
-    if (current == 0)
+    if (grid.grid[gridCoord] == 0)
     {
-        // End of critical section
-        pthread_mutex_unlock(&grid.lock[gridCoord]);
         return false;
     }
 
     // Special case for first element
-    if (current->value == p)
+    pthread_mutex_lock(&grid.lock[gridCoord]); // Beginning of critical section
+    if (grid.grid[gridCoord]->value == p)
     {
-        grid.grid[gridCoord] = current->next;
-        free(current);
-
-        // End of critical section
-        pthread_mutex_unlock(&grid.lock[gridCoord]);
+        linkedlist_t * tmp = grid.grid[gridCoord];
+        grid.grid[gridCoord] = tmp->next;
+        free(tmp);
+        
+        pthread_mutex_unlock(&grid.lock[gridCoord]); // End of critical section
         return true;
     }
 
-    linkedlist_t * prev = current;
-    current = current->next;
-
+    linkedlist_t * prev = grid.grid[gridCoord];
+    linkedlist_t * current = prev->next;
     while(current != 0)
     {
         if (current->value == p)
@@ -115,17 +92,14 @@ bool grid_remove(grid_t & grid, particle_t * p)
             prev->next = current->next;
             free(current);
 
-            // End of critical section
-            pthread_mutex_unlock(&grid.lock[gridCoord]);
+            pthread_mutex_unlock(&grid.lock[gridCoord]); // End of critical section
             return true;
         }
 
         prev = current;
         current = current->next;
     }
-    
-    // End of critical section
-    pthread_mutex_unlock(&grid.lock[gridCoord]);
+    pthread_mutex_unlock(&grid.lock[gridCoord]); // End of critical section
     return false;
 }
 

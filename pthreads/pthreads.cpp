@@ -15,10 +15,14 @@ FILE *fsave;
 pthread_barrier_t barrier;
 grid_t grid;
 
+int task_i = 0;
+
 //
 //  check that pthreads routine call was successful
 //
 #define P( condition ) {if( (condition) != 0 ) { printf( "\n FAILURE in %s, line %d\n", __FILE__, __LINE__ );exit( 1 );}}
+
+pthread_mutex_t task_lock = PTHREAD_MUTEX_INITIALIZER;
 
 //
 //  This is where the action happens
@@ -31,13 +35,13 @@ void *thread_routine( void *pthread_id )
     int first = Min(  thread_id    * particles_per_thread, n );
     int last  = Min( (thread_id+1) * particles_per_thread, n );
 
-   // printf("Thread %d running, particles %d -> %d.\n", thread_id, first, last);
+    //printf("Thread %d running, particles %d -> %d.\n", thread_id, first, last);
 
     // Simulate a number of time steps
     for( int step = 0; step < NSTEPS; step++ )
     {
         // Compute forces
-        for( int i = first; i < last; i++ )
+        for(int i = first; i < last; ++i) 
         {
             // Reset acceleration
             particles[i].ax = particles[i].ay = 0;
@@ -46,22 +50,22 @@ void *thread_routine( void *pthread_id )
             int gx = grid_coord(particles[i].x);
             int gy = grid_coord(particles[i].y);
 
-            for(int x = Max(gx - 1, 0); x <= Min(gx + 1, grid.size-1); x++)
+            for(int nx = Max(gx - 1, 0); nx <= Min(gx + 1, grid.size-1); nx++)
             {
-                for(int y = Max(gy - 1, 0); y <= Min(gy + 1, grid.size-1); y++)
+                for(int ny = Max(gy - 1, 0); ny <= Min(gy + 1, grid.size-1); ny++)
                 {
-                    linkedlist_t * curr = grid.grid[x * grid.size + y];
-                    while(curr != 0)
+                    linkedlist_t * neighbour = grid.grid[nx * grid.size + ny];
+                    while(neighbour != 0)
                     {
-                        apply_force(particles[i], *(curr->value));
-                        curr = curr->next;
+                        apply_force(particles[i], *(neighbour->value));
+                        neighbour = neighbour->next;
                     }
                 }
             }
         }
-        
-        pthread_barrier_wait( &barrier );        
-        
+
+        pthread_barrier_wait( &barrier );
+
         //  Move particles
         for( int i = first; i < last; i++ ) 
         {
