@@ -75,11 +75,20 @@ int main( int argc, char **argv )
 		// Move particles
 		for( int i = 0; i < n; i++ ) 
 		{
-            grid_remove(grid, &particles[i]);
+            int gc = grid_coord_flat(grid.size, particles[i].x, particles[i].y);
 
             move(particles[i]);
 
-            grid_add(grid, &particles[i]);
+            // Re-add the particle if it has changed grid position
+            if (gc != grid_coord_flat(grid.size, particles[i].x, particles[i].y))
+            {
+                if (! grid_remove(grid, &particles[i], gc))
+                {
+                    fprintf(stdout, "Error: Failed to remove particle '%p'. Code must be faulty. Blame source writer.\n", &particles[i]);
+                    exit(3);
+                }
+                grid_add(grid, &particles[i]);
+            }
 		}
 
 		// Save if necessary
