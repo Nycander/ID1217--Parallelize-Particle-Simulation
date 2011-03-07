@@ -57,13 +57,6 @@ int main( int argc, char **argv )
     #pragma omp parallel
     for( int step = 0; step < NSTEPS; step++ )
     {
-        #if DEBUG
-        double start;
-        #pragma omp single
-        {
-            start = omp_get_wtime();
-        }
-        #endif
 
         // Compute all forces
         #pragma omp for
@@ -89,81 +82,36 @@ int main( int argc, char **argv )
                 }
             }
         }
-
-        #if DEBUG
-        #pragma omp single
-        {
-            times[0] += (omp_get_wtime() - start);
-            start = omp_get_wtime();
-        }
-        #endif
         
-        // Clear grid
-        #pragma omp single
-        {
-            int size = grid.size;
-            grid_clear(grid);
-            grid_init(grid, size);
-        }
-
-        #if DEBUG
-        #pragma omp single
-        {
-            times[1] += (omp_get_wtime() - start);
-            start = omp_get_wtime();
-        }
-        #endif
-
         // Move particles
         #pragma omp for
         for(int i = 0; i < n; i++) 
+        {
+            int gc = grid_coord_flat(grid.size, particles[i].x, particles[i].y);
+
             move(particles[i]);
 
-        #if DEBUG
-        #pragma omp single
-        {
-            times[2] += (omp_get_wtime() - start);
-            start = omp_get_wtime();
+            // Re-add the particle if it has changed grid position
+            if (gc != grid_coord_flat(grid.size, particles[i].x, particles[i].y))
+            {
+                if (! grid_remove(grid, &particles[i], gc))
+                {
+                    fprintf(stdout, "Error: Failed to remove particle '%p'. Code must be faulty. Blame source writer.\n", &particles[i]);
+                    exit(3);
+                }
+                grid_add(grid, &particles[i]);
+            }
         }
-        #endif
-
-        // Re-populate grid
-        #pragma omp single
-        for(int i = 0; i < n; i++)
-            grid_add(grid, &particles[i]);
-        
-        #if DEBUG
-        #pragma omp single
-        {
-            times[3] += (omp_get_wtime() - start);
-            start = omp_get_wtime();
-        }
-        #endif
 
         // Save if necessary
         #pragma omp master
         if(fsave && (step%SAVEFREQ) == 0)
             save(fsave, n, particles);
 
-        #if DEBUG
-        #pragma omp single
-        {
-            times[4] += (omp_get_wtime() - start);
-            start = omp_get_wtime();
-        }
-        #endif
     }
     simulation_time = read_timer( ) - simulation_time;
     
     printf("n = %d, n_threads = %d, simulation time = %g seconds\n", n, n_threads, simulation_time );
-
-    #if DEBUG
-    printf("Forces: %f s\n", times[0]);
-    printf("Clear:  %f s\n", times[1]);
-    printf("Moving: %f s\n", times[2]);
-    printf("Re-pop: %f s\n", times[3]);
-    printf("Saving: %f s\n", times[4]);
-    #endif
 
     grid_clear(grid);
     free(particles);

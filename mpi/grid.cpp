@@ -1,16 +1,8 @@
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include "grid.h"
-
-
-//
-// Calculate the grid coordinate from a real coordinate
-//
-int grid_coord(double c)
-{
-    return (int)(c / cutoff);
-}
 
 
 //
@@ -19,6 +11,8 @@ int grid_coord(double c)
 void grid_init(grid_t & grid, int size)
 {
     grid.size = size;
+
+    // Initialize grid
     grid.grid = (linkedlist**) malloc(sizeof(linkedlist*) * size * size);
 
     if (grid.grid == NULL)
@@ -35,69 +29,45 @@ void grid_init(grid_t & grid, int size)
 //
 void grid_add(grid_t & grid, particle_t * p)
 {
-    int gridx = grid_coord(p->x);
-    int gridy = grid_coord(p->y);
-
-    int gridCoord = gridx * grid.size + gridy;
+    int gridCoord = grid_coord_flat(grid.size, p->x, p->y);
 
     linkedlist_t * newElement = (linkedlist_t *) malloc(sizeof(linkedlist));
     newElement->value = p;
 
-    // Beginning of critical section
-    linkedlist_t * tmp = grid.grid[gridCoord];
-
-    newElement->next = tmp;
+    newElement->next = grid.grid[gridCoord];
 
     grid.grid[gridCoord] = newElement;
-    // End of critical section
 }
 
 //
-// grid remove
+// Removes a particle from a grid
 //
-bool grid_remove(grid_t & grid, particle_t * p)
+bool grid_remove(grid_t & grid, particle_t * p, int gridCoord)
 {
-    int grid_x = grid_coord(p->x);
-    int grid_y = grid_coord(p->y);
-    int gridCoord = grid_x * grid.size + grid_y;
-
-    // Find p in linkedlist
-    linkedlist_t * current = grid.grid[gridCoord];
+    if (gridCoord == -1)
+        gridCoord = grid_coord_flat(grid.size, p->x, p->y);
 
     // No elements?
-    if (current == 0)
+    if (grid.grid[gridCoord] == 0)
     {
         return false;
     }
 
-    // Special case for size = 1
-    if (current->next == 0)
+    linkedlist_t ** nodePointer = &(grid.grid[gridCoord]);
+    linkedlist_t * current = grid.grid[gridCoord];
+
+    while(current && (current->value != p))
     {
-        if (current->value != p)
-        {
-            return false;
-        }
-
-        grid.grid[gridCoord] = 0;
-        free(current);
-        return true;
-    }
-
-    linkedlist_t * prev = current;
-    current = current->next;
-    while(current != 0)
-    {
-        if (current->value == p)
-        {
-            prev->next = current->next;
-            free(current);
-            return true;
-        }
-
-        prev = current;
+        nodePointer = &(current->next);
         current = current->next;
     }
-    return false;
+
+    if (current)
+    {
+        *nodePointer = current->next;
+        free(current);
+    }
+    return !!current;
 }
 
 //
@@ -116,4 +86,19 @@ void grid_clear(grid_t & grid)
         }
     }
     free(grid.grid);
+}
+
+int grid_size(grid_t & grid)
+{
+    int count = 0;
+    for (int i = 0; i < grid.size * grid.size; ++i)
+    {
+        linkedlist_t * curr = grid.grid[i];
+        while(curr != 0)
+        {
+            count++;
+            curr = curr->next;
+        }
+    }
+    return count;
 }
