@@ -26,7 +26,7 @@ typedef struct grid grid_t;
 
 void grid_init(grid_t & grid, int gridsize);
 void grid_add(grid_t & grid, particle_t * particle);
-bool grid_remove(grid_t & grid, particle_t * particles);
+bool grid_remove(grid_t & grid, particle_t * p, int gridCoord = -1);
 void grid_clear(grid_t & grid);
 int  grid_size(grid_t & grid);
 

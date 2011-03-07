@@ -7,6 +7,8 @@
 #include "common.h"
 #include "grid.h"
 
+#define DEBUG 1
+
 //
 //  global variables
 int n, n_threads;
@@ -15,7 +17,10 @@ FILE *fsave;
 pthread_barrier_t barrier;
 grid_t grid;
 
-int task_i = 0;
+#if DEBUG
+double tforces = 0.0;
+double tmove = 0.0;
+#endif
 
 //
 //  check that pthreads routine call was successful
@@ -40,6 +45,10 @@ void *thread_routine( void *pthread_id )
     // Simulate a number of time steps
     for( int step = 0; step < NSTEPS; step++ )
     {
+        #if DEBUG
+        double start = read_timer();
+        #endif
+
         // Compute forces
         for(int i = first; i < last; ++i) 
         {
@@ -65,22 +74,36 @@ void *thread_routine( void *pthread_id )
         }
 
         pthread_barrier_wait( &barrier );
+        #if DEBUG
+        if (thread_id == 0)
+            tforces += (read_timer() - start);
+        start = read_timer();
+        #endif
 
         //  Move particles
-        for( int i = first; i < last; i++ ) 
+        for(int i = first; i < last; i++ ) 
         {
-            if (! grid_remove(grid, &particles[i]))
-            {
-                fprintf(stdout, "Error: Failed to remove particle '%p'. Code must be faulty. Blame source writer.\n", &particles[i]);
-                exit(3);
-            }
+            int gc = grid_coord_flat(grid.size, particles[i].x, particles[i].y);
 
             move(particles[i]);
 
-            grid_add(grid, &particles[i]);
+            // Re-add the particle if it has changed grid position
+            if (gc != grid_coord_flat(grid.size, particles[i].x, particles[i].y))
+            {
+                if (! grid_remove(grid, &particles[i], gc))
+                {
+                    fprintf(stdout, "Error: Failed to remove particle '%p'. Code must be faulty. Blame source writer.\n", &particles[i]);
+                    exit(3);
+                }
+                grid_add(grid, &particles[i]);
+            }
         }
 
         pthread_barrier_wait( &barrier );
+        #if DEBUG
+        if (thread_id == 0)
+            tmove += (read_timer() - start);
+        #endif
 
         // Save if necessary
         if( thread_id == 0 && fsave && (step%SAVEFREQ) == 0 )
@@ -164,6 +187,11 @@ int main( int argc, char **argv )
     
     printf( "n = %d, n_threads = %d, simulation time = %g seconds\n", n, n_threads, simulation_time );
     
+    #if DEBUG
+    printf("Reading: %f\n", tforces);
+    printf("Writing: %f\n", tmove);
+    #endif
+
     //
     //  release resources
     //
