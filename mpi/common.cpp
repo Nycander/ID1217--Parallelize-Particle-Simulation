@@ -56,13 +56,12 @@ double set_size( int n )
 //
 void init_particles( int n, particle_t *p )
 {
-// TODO: Use portable c code
+	long seed = (long)time(NULL);
 #ifdef _WIN32
-	srand((long)time(NULL));
+	srand(seed);
 #else
-	srand48( (long)time(NULL) );
+	srand48(seed);
 #endif
-
 	int sx = (int)ceil(sqrt((double)n));
 	int sy = (n+sx-1)/sx;
 
@@ -75,11 +74,12 @@ void init_particles( int n, particle_t *p )
 		//
 		//  make sure particles are not spatially sorted
 		//
+		long seed = (long)time(NULL);
 #ifdef _WIN32
-		srand((long)time(NULL));
+		srand(seed);
 		int j = rand()%(n-i);
 #else
-		srand48((long)time(NULL));
+		srand48(seed);
 		int j = lrand48()%(n-i);
 #endif
 		int k = shuffle[j];
