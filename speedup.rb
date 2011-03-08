@@ -27,9 +27,11 @@ programs.each_index do |p_i|
         puts "cores: " + c.to_s + "   time: " + result[p_i][c].to_s + "   speedup: " + (result[p_i][1] / result[p_i][c]).to_s
     end
     puts "\n"
+
 end
 programs.each_index() do |p_i|
     file = "plot_dir/" + programs[p_i] + "_speedup.dat"
+    p = programs[p_i]
     File.delete(file) if File.exists?(file)
     next if p_i == 0
     1.upto(number_of_cores) do |c|
@@ -39,4 +41,20 @@ programs.each_index() do |p_i|
             f.puts c.to_s + "   " + speedup.to_s
         end
     end
+`echo 'set xlabel "Number of Threads"
+set ylabel "Speedup Factor"
+set terminal pdfcairo #enhanced "Helvetica" 16
+set boxwidth 0.8
+set style fill solid
+
+set xrange [ 0.5 : 4.5 ]
+set yrange [ 0 : 4.5 ]
+set mxtics 0
+set mytics 2
+set xtics 0,1
+set ytics 0,1
+
+
+plot "plot_dir/#{p}_speedup.dat" using 1:2 with boxes lt rgb "steelblue"\
+    title "#{p} speedup factor"' | gnuplot > report/plots/#{p}_speedup.pdf`
 end
