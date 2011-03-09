@@ -135,16 +135,27 @@ int main(int argc, char **argv)
         start = read_timer();
         #endif
 
+        // Clear grid
+        int size = grid.size;
+        grid_clear(grid);
+        grid_init(grid, size);
+        
+        #if DEBUG
+        times[1] += (read_timer() - start);
+        start = read_timer();
+        #endif
+
         //
         //  move particles
         //
         for (int i = 0; i < nlocal; i++)
         {
             move(local[i]);
+            grid_add(grid, &local[i]);
         }
-        
+
         #if DEBUG
-        times[1] += (read_timer() - start);
+        times[2] += (read_timer() - start);
         start = read_timer();
         #endif
 
@@ -153,7 +164,7 @@ int main(int argc, char **argv)
         MPI_Isend(local, nlocal, PARTICLE, r, 0, MPI_COMM_WORLD, &request);
         for (int i = 0; i < n_proc -1; ++i)
         {
-            // TODO: ISend
+            int target = (rank + r) % n_proc;
 
             MPI_Recv(&parts[r], partition_sizes[r], PARTICLE, r, 0, MPI_COMM_WORLD, &requests[r]);
             grid_add(grid, &parts[i][j]);
@@ -162,16 +173,6 @@ int main(int argc, char **argv)
             MPI_Isend(local, nlocal, PARTICLE, r, 0, MPI_COMM_WORLD, &request);
             int r = (r + 1) % n_proc;
         }
-        
-        #if DEBUG
-        times[2] += (read_timer() - start);
-        start = read_timer();
-        #endif
-
-        // Clear grid
-        int size = grid.size;
-        grid_clear(grid);
-        grid_init(grid, size);
 
         
         #if DEBUG
@@ -183,7 +184,7 @@ int main(int argc, char **argv)
 
         particle_t *parts[n_proc];
         // Receive particles from "the cloud" and add it to the grid
-        for (int r = 0; r < n_proc; ++r)
+        for (int r = 1; r < n_proc; ++r)
         {
             int target = (rank + r) % n_proc;
             MPI_Request tmp;
@@ -237,13 +238,15 @@ int main(int argc, char **argv)
         printf("n = %d, n_procs = %d, simulation time = %f seconds\n", n, n_proc, simulation_time);
     
     #if DEBUG
+    double result[5];
+    MPI_Reduce(times, result, 5, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
     if (rank == 0)
     {
-        printf("Force: %f\n", rank, times[0]);
-        printf("Move: %f\n", rank, times[1]);
-        printf("Send: %f\n", rank, times[2]);
-        printf("Clear: %f\n", rank, times[3]);
-        printf("Receive: %f\n", rank, times[4]);
+        printf("Force: %f\n", rank, result[0]/n_proc);
+        printf("Clear: %f\n", rank, result[1]/n_proc);
+        printf("Move: %f\n", rank, result[2]/n_proc);
+        printf("Send: %f\n", rank, result[3]/n_proc);
+        printf("Receive: %f\n", rank, result[4]/n_proc);
     }
     #endif
 
