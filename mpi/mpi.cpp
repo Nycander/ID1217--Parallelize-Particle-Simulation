@@ -6,6 +6,8 @@
 #include "common.h"
 #include "grid.h"
 
+#define DEBUG 1
+
 //
 //  benchmarking program
 //
@@ -76,6 +78,9 @@ int main(int argc, char **argv)
     //MPI_Bcast(particles, n, PARTICLE, 0, MPI_COMM_WORLD);
     MPI_Scatterv( particles, partition_sizes, partition_offsets, PARTICLE, local, nlocal, PARTICLE, 0, MPI_COMM_WORLD );
 
+#if DEBUG
+    double times[5];
+#endif
 
     // Create a grid for optimizing the interactions
     int gridSize = (size/cutoff) + 1; // TODO: Rounding errors?
@@ -97,6 +102,10 @@ int main(int argc, char **argv)
         if (fsave && (step%SAVEFREQ) == 0)
             save(fsave, n, particles);
         
+        #if DEBUG
+        double start = read_timer();
+        #endif
+
         //
         //  compute all forces
         //
@@ -121,6 +130,11 @@ int main(int argc, char **argv)
             }
         }
         
+        #if DEBUG
+        times[0] += (read_timer() - start);
+        start = read_timer();
+        #endif
+
         //
         //  move particles
         //
@@ -128,6 +142,11 @@ int main(int argc, char **argv)
         {
             move(local[i]);
         }
+        
+        #if DEBUG
+        times[1] += (read_timer() - start);
+        start = read_timer();
+        #endif
 
         for (int r = 0; r < n_proc; ++r)
         {
@@ -136,12 +155,22 @@ int main(int argc, char **argv)
             MPI_Request request;
             MPI_Isend(local, nlocal, PARTICLE, r, 0, MPI_COMM_WORLD, &request);
         }
+        
+        #if DEBUG
+        times[2] += (read_timer() - start);
+        start = read_timer();
+        #endif
 
         // Clear grid
         int size = grid.size;
         grid_clear(grid);
         grid_init(grid, size);
 
+        
+        #if DEBUG
+        times[3] += (read_timer() - start);
+        start = read_timer();
+        #endif
 
         // Receive particles from "the cloud" and add it to the grid
         for (int r = 0; r < n_proc; ++r)
@@ -150,9 +179,8 @@ int main(int argc, char **argv)
 
             // Receive partion_sizes[r] particles
             particle_t parts[partition_sizes[target]];
-
-            // TODO: Check status?
-            MPI_Status status;
+           
+            MPI_Status status; // TODO: Check status?
             MPI_Recv(&parts, partition_sizes[target], PARTICLE, target, 0, MPI_COMM_WORLD, &status);
 
             for (int i = 0; i < partition_sizes[target]; ++i)
@@ -160,12 +188,28 @@ int main(int argc, char **argv)
                 grid_add(grid, &parts[i]);
             }
         }
+        
+        #if DEBUG
+        times[4] += (read_timer() - start);
+        start = read_timer();
+        #endif
     }
     simulation_time = read_timer() - simulation_time;
     
     if (rank == 0)
         printf("n = %d, n_procs = %d, simulation time = %f seconds\n", n, n_proc, simulation_time);
     
+    #if DEBUG
+    if (rank == 0)
+    {
+        printf("Force: %f\n", rank, times[0]);
+        printf("Move: %f\n", rank, times[1]);
+        printf("Send: %f\n", rank, times[2]);
+        printf("Clear: %f\n", rank, times[3]);
+        printf("Receive: %f\n", rank, times[4]);
+    }
+    #endif
+
     //
     //  release resources
     //
