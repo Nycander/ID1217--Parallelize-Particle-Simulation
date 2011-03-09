@@ -47,8 +47,8 @@ set terminal pdfcairo #enhanced "Helvetica" 16
 set boxwidth 0.8
 set style fill solid
 
-set xrange [ 0.5 : 4.5 ]
-set yrange [ 0 : 4.5 ]
+set xrange [ 0.5 : #{number_of_cores+0.5} ]
+set yrange [ 0 : #{number_of_cores+0.5} ]
 set mxtics 0
 set mytics 2
 set xtics 0,1
