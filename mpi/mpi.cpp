@@ -148,12 +148,19 @@ int main(int argc, char **argv)
         start = read_timer();
         #endif
 
-        for (int r = 0; r < n_proc; ++r)
+        int r = (rank + 1) % n_proc;
+        MPI_Request request;
+        MPI_Isend(local, nlocal, PARTICLE, r, 0, MPI_COMM_WORLD, &request);
+        for (int i = 0; i < n_proc -1; ++i)
         {
             // TODO: ISend
 
+            MPI_Recv(&parts[r], partition_sizes[r], PARTICLE, r, 0, MPI_COMM_WORLD, &requests[r]);
+            grid_add(grid, &parts[i][j]);
+
             MPI_Request request;
             MPI_Isend(local, nlocal, PARTICLE, r, 0, MPI_COMM_WORLD, &request);
+            int r = (r + 1) % n_proc;
         }
         
         #if DEBUG
@@ -172,20 +179,50 @@ int main(int argc, char **argv)
         start = read_timer();
         #endif
 
+        MPI_Request requests[n_proc];
+
+        particle_t *parts[n_proc];
         // Receive particles from "the cloud" and add it to the grid
         for (int r = 0; r < n_proc; ++r)
         {
             int target = (rank + r) % n_proc;
-
+            MPI_Request tmp;
+            requests[target] = tmp;
             // Receive partion_sizes[r] particles
-            particle_t parts[partition_sizes[target]];
-           
-            MPI_Status status; // TODO: Check status?
-            MPI_Recv(&parts, partition_sizes[target], PARTICLE, target, 0, MPI_COMM_WORLD, &status);
-
-            for (int i = 0; i < partition_sizes[target]; ++i)
+            parts[target] = (particle_t*) malloc(sizeof(particle_t) * partition_sizes[target]);
+            printf("time to get suspect stuff... size:%d of target:%d\n", partition_sizes[target], target);
+            printf("&parts[target]:%d\n", &parts[target]);
+            printf("partition_sizes[target]:%d\n", partition_sizes[target]);
+            printf("PARTICLE:%d\n", PARTICLE);
+            printf("target:%d\n", target);
+            printf("0:%d\n", 0);
+            printf("MPI_COMM_WORLD:%d\n", MPI_COMM_WORLD);
+            printf("&requests[target]:%d\n", &requests[target]);
+            MPI_Irecv(&parts[target], partition_sizes[target], PARTICLE, target, 0, MPI_COMM_WORLD, &requests[target]);
+            printf("got suspect stuff.\n");
+        }
+        int result;
+        MPI_Status status;
+        for (int read = 0; read < n_proc; ++read)
+        {
+            int i = 0;
+            while(true) //while there is still stuff to do.
             {
-                grid_add(grid, &parts[i]);
+                if(requests[i] == NULL) continue;
+                MPI_Test(&requests[i], &result, &status);
+
+                if(result) //if we should do stuff with this
+                {
+                    for(int j = 0; j < partition_sizes[i]; j++)
+                    {
+                        grid_add(grid, &parts[i][j]);
+                    }
+                    free(parts[i]);
+                    requests[i] = NULL;
+                    break;
+                }
+                i = (i + 1) % n_proc;
+            
             }
         }
         
