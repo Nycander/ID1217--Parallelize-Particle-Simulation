@@ -77,7 +77,7 @@ int main( int argc, char **argv )
 		{
             int gc = grid_coord_flat(grid.size, particles[i].x, particles[i].y);
 
-            move(particles[i]);
+           	move(particles[i]);
 
             // Re-add the particle if it has changed grid position
             if (gc != grid_coord_flat(grid.size, particles[i].x, particles[i].y))

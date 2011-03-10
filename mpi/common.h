@@ -42,6 +42,7 @@ typedef struct
   double vy;
   double ax;
   double ay;
+  int prevgrid;
 } particle_t;
 
 
