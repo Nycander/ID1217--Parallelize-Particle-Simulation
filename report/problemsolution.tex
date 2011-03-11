@@ -1,0 +1,22 @@
+
+%TODO: describe how we made the serial program O(n), talk about grids.
+    \subsection{Simulation Design}
+
+        Each frame the original implementation made $n^2$ computations, for each
+        particle it calculated the distance of each other particle, it the
+        particle was close enough it also calculated the real effect, and
+        applied the appropriate force to the particle. 
+
+        \begin{equation}
+            gridSize = \frac{\sqrt{0.0005 \cdot n}}{0.01} + 1 \\
+        \end{equation}
+        \begin{equation}
+            grid.size = gridSize^2 = \left(\frac{\sqrt{0.0005 \cdot n}}{0.01} + 1\right)^2
+        \end{equation}
+
+    \subsection{Parallelization Design with Shared Memory}% TODO: A description of the synchronization you used in the shared memory implementation.
+
+    \subsection{Parallelization Design with Distributed Memory}% TODO: A description of the communication you used in the distributed memory implementation.
+
+    %Maybe this does not need its own seciton? TODO
+    \subsection{Design Decisions}% TODO: A description of the design choices that you tried and how did they affect the performance.
