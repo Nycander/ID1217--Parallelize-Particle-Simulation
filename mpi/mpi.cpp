@@ -93,6 +93,7 @@ int main(int argc, char **argv)
     grid_init(grid, gridSize);
     for (int i = 0; i < n; ++i)
     {
+        particles[i].prevgrid = grid_coord_flat(grid.size, particles[i].x, particles[i].y);
         grid_add(grid, &particles[i]);
     }
    
@@ -181,7 +182,8 @@ int main(int argc, char **argv)
 
         // Send our particles to the next thread
         MPI_Request request;
-        if (n_proc > 1) MPI_Isend(local, nlocal, PARTICLE, next, 0, MPI_COMM_WORLD, &request);
+        // TODO: Let the 'tag' be the block id.
+        if (n_proc > 1) MPI_Isend(local, nlocal, PARTICLE, next, rank, MPI_COMM_WORLD, &request);
 
         for (int i = 0; i < n_proc; ++i)
         {
@@ -192,11 +194,19 @@ int main(int argc, char **argv)
             if (block == rank)
                 continue;
             
-            MPI_Status stat;   
+            // TODO: Let the 'tag' be the block id.
+            MPI_Status * stat = (MPI_Status*) malloc(sizeof(MPI_Status));
             MPI_Recv(particles + partition_offsets[block], 
                      partition_sizes[block], 
-                     PARTICLE, previous, 0, MPI_COMM_WORLD, &stat);
+                     PARTICLE, previous, block, MPI_COMM_WORLD, stat);
             
+            if (stat->MPI_ERROR != MPI_SUCCESS)
+            {
+                fprintf(stderr, "ERROR! ERROR! %d\n", stat->MPI_ERROR);
+                exit(5);
+                return 5;
+            }
+
             for (int p = 0; p < partition_sizes[block]; ++p)
             {
                 particle_t * part = particles+partition_offsets[block]+p;
@@ -242,7 +252,7 @@ int main(int argc, char **argv)
 
             MPI_Request req;
             MPI_Isend(particles + partition_offsets[block], partition_sizes[block], 
-                      PARTICLE, next, 0, MPI_COMM_WORLD, &req);
+                      PARTICLE, next, block, MPI_COMM_WORLD, &req);
         }
         
         #if DEBUG
