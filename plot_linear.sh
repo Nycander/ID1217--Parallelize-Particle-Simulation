@@ -2,8 +2,8 @@
 #Runs: mpi, openmp, pthreads and serial variants of the particle simulation.
 
 PROGRAMS="serial
-pthreads"
-#"openmp"
+pthreads
+openmp"
 #mpi"
 
 
@@ -23,7 +23,7 @@ do
         echo "The Frog King is brave  as can be ["$i"]"
         for j in `seq 1 1 5`
         do
-            $p -n $i -p 4 | tail -n 1 | ruby sed.rb >> $tmpfile
+            $p/$p -n $i -p 4 | tail -n 1 | ruby sed.rb >> $tmpfile
         done
         cat $tmpfile | ruby median.rb >> $outfile
         echo "" > $tmpfile

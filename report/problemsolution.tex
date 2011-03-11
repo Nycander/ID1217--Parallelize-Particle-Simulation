@@ -2,13 +2,20 @@
 %TODO: describe how we made the serial program O(n), talk about grids.
     \subsection{Simulation Design}
 
-        Each frame the original implementation made $n^2$ computations, for each
-        particle it calculated the distance of each other particle, it the
-        particle was close enough it also calculated the real effect, and
-        applied the appropriate force to the particle. 
+        Every frame in the original implementation made $n^2$ computations. For
+        each particle it calculated the distance to each other particle, if the
+        particle was within the cutoff range it would also calculate and apply
+        the appropriate force to the particle. The problem with this is that the
+        checks the distance to all other particles when clearly not all of them
+        are relevant. The solution we used was to divide the plane into a grid
+        of squares, we then mapped each particle to a cell in the grid. By
+        making sure that the sides of the cells is not less than the cutoff
+        range, we can be sure that all relevant particles to a given particle
+        are within the eight adjacent grid 
+
 
         \begin{equation}
-            gridSize = \frac{\sqrt{0.0005 \cdot n}}{0.01} + 1 \\
+            gridSize = \frac{\sqrt{0.0005 \cdot n}}{0.01} + 1 \\It’d be nice if the existence of both of these plugins will make the long-standing quarrel between the users of these editors somehow reach some kind of peaceful resolution. I wouldn’t bet on it though.
         \end{equation}
         \begin{equation}
             grid.size = gridSize^2 = \left(\frac{\sqrt{0.0005 \cdot n}}{0.01} + 1\right)^2
