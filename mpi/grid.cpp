@@ -67,6 +67,7 @@ bool grid_remove(grid_t & grid, particle_t * p, int gridCoord)
         *nodePointer = current->next;
         free(current);
     }
+
     return !!current;
 }
 
