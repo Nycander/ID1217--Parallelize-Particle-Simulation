@@ -179,6 +179,7 @@ int main(int argc, char **argv)
         start = read_timer();
         #endif
 
+        /*
         MPI_Barrier(MPI_COMM_WORLD);
         if (rank == 0)
         {
@@ -186,6 +187,7 @@ int main(int argc, char **argv)
             fflush(stdout);
         }
         MPI_Barrier(MPI_COMM_WORLD);
+        */
         
         // Synchronize particles by heartbeat distribution
         int previous = (rank == 0 ? n_proc - 1 : rank -1);
@@ -204,6 +206,7 @@ int main(int argc, char **argv)
             if (block == rank)
                 continue;
 
+            /*
             for(int i = 0; i < n_proc; i++)
             {
                 MPI_Barrier(MPI_COMM_WORLD);
@@ -217,14 +220,16 @@ int main(int argc, char **argv)
                 }
                 MPI_Barrier(MPI_COMM_WORLD);
             }
+            */
             
             // Heartbeat communication.
+            memset(particles + partition_offsets[block], 0, sizeof(particle_t)*partition_sizes[block]);
             MPI_Sendrecv(particles + partition_offsets[lastblock], partition_sizes[lastblock], 
                          PARTICLE, next, lastblock, 
 
                          particles + partition_offsets[block], partition_sizes[block], 
                          PARTICLE, previous, block, MPI_COMM_WORLD, stat);
-            
+            /*
             MPI_Barrier(MPI_COMM_WORLD);
             for(int i = 0; i < n_proc; i++)
             {
@@ -242,7 +247,8 @@ int main(int argc, char **argv)
                 }
                 MPI_Barrier(MPI_COMM_WORLD);
             }
-
+            */
+            /*
             if (stat->MPI_ERROR != MPI_SUCCESS)
             {
                 int tmp;
@@ -258,6 +264,7 @@ int main(int argc, char **argv)
                 exit(5);
                 return 5;
             }
+            */
 
             for (int p = partition_offsets[block]; p < partition_offsets[block]+partition_sizes[block]; ++p)
             {
@@ -294,9 +301,8 @@ int main(int argc, char **argv)
     if (rank == 0)
     {
         printf("Force: %f\n", rank, result[0]/n_proc);
-        printf("Clear: %f\n", rank, result[1]/n_proc);
-        printf("Move: %f\n", rank, result[2]/n_proc);
-        printf("Send: %f\n", rank, result[3]/n_proc);
+        printf("Move: %f\n", rank, result[1]/n_proc);
+        printf("Send: %f\n", rank, result[2]/n_proc);
     }
     #endif
 
