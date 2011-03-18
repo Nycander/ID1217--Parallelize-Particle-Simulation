@@ -233,7 +233,8 @@ int main(int argc, char **argv)
                 {
                     int count;
                     MPI_Get_count(stat, PARTICLE, &count);
-                    printf("[%d]: Received %d particles.\n", rank, count);
+                    printf("[%d]: Received %d particles. Status: [count: %d, cancelled: %d, Source: %d, Tag: %d, Error: %d]\n", 
+                                rank, count, stat->count, stat->cancelled, stat->MPI_SOURCE, stat->MPI_TAG, stat->MPI_ERROR);
                     if (i+1 == n_proc)
                         printf("\n");
                     
@@ -245,9 +246,15 @@ int main(int argc, char **argv)
             if (stat->MPI_ERROR != MPI_SUCCESS)
             {
                 int tmp;
-                char str[100];
-                MPI_Error_string(stat->MPI_ERROR, str, &tmp);
-                fprintf(stderr, "[%d] ERROR %d: %s.\n\tWhile recieving block %d(%d - %d) from rank %d.\n", rank, stat->MPI_ERROR, str, block, partition_offsets[lastblock], partition_offsets[lastblock]+partition_sizes[lastblock]-1, previous);
+                fprintf(stdout, "[%d] ERROR %d (count: %d, cancelled: %d, Source: %d, Tag: %d, Error: %d)\n! while recieving block %d(%d - %d) from rank %d.\n", 
+                        rank, stat->MPI_ERROR, 
+                        block, partition_offsets[lastblock], partition_offsets[lastblock]+partition_sizes[lastblock]-1, previous);
+                fflush(stdout);
+                printf("IDS: ");
+                for (int p = partition_offsets[block]; p < partition_offsets[block]+partition_sizes[block]; ++p)
+                    printf("%d ", particles[p].id);
+                printf("\n");
+                fflush(stdout);
                 exit(5);
                 return 5;
             }
