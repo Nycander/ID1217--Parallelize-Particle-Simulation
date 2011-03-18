@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <string.h>
 
 #include "common.h"
 #include "grid.h"
@@ -43,9 +44,19 @@ int main(int argc, char **argv)
     particle_t *particles = (particle_t*) malloc(n * sizeof(particle_t));
     grid_t grid;
     
+    int si = sizeof(int);
+    int sd = sizeof(double);
+    int ind = -si;
+    int blens[] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    MPI_Aint indices[] = {ind += si, ind += si, ind += si, 
+                          ind += sd, ind += sd, ind += sd, 
+                          ind += sd, ind += sd, ind += sd, sizeof(particle_t)};
+    MPI_Datatype oldtypes[] = { MPI_INTEGER, MPI_INTEGER, MPI_INTEGER, 
+                                MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE,
+                                MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_UB  };
+
     MPI_Datatype PARTICLE;
-    MPI_Type_contiguous(6, MPI_DOUBLE, &PARTICLE);
-    MPI_Type_contiguous(1, MPI_INTEGER, &PARTICLE);
+    MPI_Type_struct(10, blens, indices, oldtypes, &PARTICLE);
     MPI_Type_commit(&PARTICLE);
     
     //  
@@ -65,12 +76,9 @@ int main(int argc, char **argv)
         partition_sizes[i] = partition_offsets[i+1] - partition_offsets[i];
     }
     
-    //
-    //  allocate storage for local partition
-
-    //
-    int nlocal = partition_sizes[rank];
-    particle_t *local = (particle_t*) malloc(nlocal * sizeof(particle_t));
+    // Define local block
+    int first = partition_offsets[rank];
+    int last = partition_offsets[rank] + partition_sizes[rank];
     
     //
     //  initialize and distribute the particles (that's fine to leave it unoptimized)
@@ -81,11 +89,10 @@ int main(int argc, char **argv)
         init_particles(n, particles);
     }
 
-    //MPI_Bcast(particles, n, PARTICLE, 0, MPI_COMM_WORLD);
-    MPI_Scatterv( particles, partition_sizes, partition_offsets, PARTICLE, local, nlocal, PARTICLE, 0, MPI_COMM_WORLD );
+    MPI_Bcast(particles, n, PARTICLE, 0, MPI_COMM_WORLD);
 
 #if DEBUG
-    double times[5];
+    double times[5]; // TODO: Remove this.
 #endif
 
     // Create a grid for optimizing the interactions
@@ -93,8 +100,8 @@ int main(int argc, char **argv)
     grid_init(grid, gridSize);
     for (int i = 0; i < n; ++i)
     {
-        particles[i].prevgrid = grid_coord_flat(grid.size, particles[i].x, particles[i].y);
-        grid_add(grid, &particles[i]);
+        particles[i].grid_coord = particles[i].prev_grid_coord = grid_coord_flat(grid.size, particles[i].x, particles[i].y);
+        grid_add(grid, particles[i]);
     }
    
     //
@@ -116,12 +123,12 @@ int main(int argc, char **argv)
         //
         //  compute all forces
         //
-        for (int i = 0; i < nlocal; i++)
+        for (int i = first; i < last; i++)
         {
-            local[i].ax = local[i].ay = 0;
+            particles[i].ax = particles[i].ay = 0;
             // Use the grid to traverse neighbours
-            int gx = grid_coord(local[i].x);
-            int gy = grid_coord(local[i].y);
+            int gx = grid_coord(particles[i].x);
+            int gy = grid_coord(particles[i].y);
 
             for(int nx = Max(gx - 1, 0); nx <= Min(gx + 1, grid.size-1); nx++)
             {
@@ -130,7 +137,7 @@ int main(int argc, char **argv)
                     linkedlist_t * neighbour = grid.grid[nx * grid.size + ny];
                     while(neighbour != 0)
                     {
-                        apply_force(local[i], *(neighbour->value));
+                        apply_force(particles[i], particles[neighbour->particle_id]);
                         neighbour = neighbour->next;
                     }
                 }
@@ -145,25 +152,25 @@ int main(int argc, char **argv)
         //
         //  move particles
         //
-        for (int i = 0; i < nlocal; i++)
+        for (int i = first; i < last; i++)
         {
-            int gc = grid_coord_flat(grid.size, local[i].x, local[i].y);
+            particles[i].prev_grid_coord = particles[i].grid_coord;
 
-            local[i].prevgrid = gc;
+            move(particles[i]);
 
-            move(local[i]);
-
+            particles[i].grid_coord = grid_coord_flat(grid.size, particles[i].x, particles[i].y);
+            
             // Re-add the particle if it has changed grid position
-            if (gc != grid_coord_flat(grid.size, local[i].x, local[i].y))
+            if (particles[i].prev_grid_coord != particles[i].grid_coord)
             {
-                if (! grid_remove(grid, particles + partition_offsets[rank] + i, gc))
+                if (! grid_remove(grid, particles[i], particles[i].prev_grid_coord))
                 {
-                    fprintf(stdout, "Error: Failed to remove particle '%p'. Code must be faulty. Blame source writer.\n", &local[i]);
+                    fprintf(stdout, "Error: Failed to remove particle '%p'. Code must be faulty. Blame source writer.\n", &particles[i]);
                     exit(3);
                     return 3;
                 }
 
-                grid_add(grid, particles + partition_offsets[rank] + i);
+                grid_add(grid, particles[i]);
             }
         }
 
@@ -172,88 +179,97 @@ int main(int argc, char **argv)
         start = read_timer();
         #endif
 
-        // Synchronize particles by pipeline
-        int r = (rank + 1) % n_proc;
-
-        // Get all other particle blocks
+        MPI_Barrier(MPI_COMM_WORLD);
+        if (rank == 0)
+        {
+            printf("\n ------- \n");
+            fflush(stdout);
+        }
+        MPI_Barrier(MPI_COMM_WORLD);
+        
+        // Synchronize particles by heartbeat distribution
         int previous = (rank == 0 ? n_proc - 1 : rank -1);
         int next = (rank == n_proc - 1 ? 0 : rank + 1);
 
-
+        MPI_Status * stat = (MPI_Status*) malloc(sizeof(MPI_Status));
+        int lastblock = rank;
         // Send our particles to the next thread
-        MPI_Request request;
-        // TODO: Let the 'tag' be the block id.
-        if (n_proc > 1) MPI_Isend(local, nlocal, PARTICLE, next, rank, MPI_COMM_WORLD, &request);
-
-        for (int i = 0; i < n_proc; ++i)
+        for (int i = 1; i < n_proc; ++i)
         {
+            // Calculate what partition we're currently processing
             int block = rank - i;
             if (block < 0)
                 block = n_proc + block;
 
             if (block == rank)
                 continue;
+
+            for(int i = 0; i < n_proc; i++)
+            {
+                MPI_Barrier(MPI_COMM_WORLD);
+                if (rank == i)
+                {
+                    printf("[%d] Heartbeat: Send %d (%d - %d) to %d, Receive %d (%d - %d) from %d\n", rank, lastblock, partition_offsets[lastblock], partition_offsets[lastblock]+partition_sizes[lastblock]-1, next, block, partition_offsets[block], partition_offsets[block]+partition_sizes[block]-1, previous);
+                    if (i+1 == n_proc)
+                        printf("\n");
+                    
+                    fflush(stdout);
+                }
+                MPI_Barrier(MPI_COMM_WORLD);
+            }
             
-            // TODO: Let the 'tag' be the block id.
-            MPI_Status * stat = (MPI_Status*) malloc(sizeof(MPI_Status));
-            MPI_Recv(particles + partition_offsets[block], 
-                     partition_sizes[block], 
-                     PARTICLE, previous, block, MPI_COMM_WORLD, stat);
+            // Heartbeat communication.
+            MPI_Sendrecv(particles + partition_offsets[lastblock], partition_sizes[lastblock], 
+                         PARTICLE, next, lastblock, 
+
+                         particles + partition_offsets[block], partition_sizes[block], 
+                         PARTICLE, previous, block, MPI_COMM_WORLD, stat);
             
+            MPI_Barrier(MPI_COMM_WORLD);
+            for(int i = 0; i < n_proc; i++)
+            {
+                MPI_Barrier(MPI_COMM_WORLD);
+                if (rank == i)
+                {
+                    int count;
+                    MPI_Get_count(stat, PARTICLE, &count);
+                    printf("[%d]: Received %d particles.\n", rank, count);
+                    if (i+1 == n_proc)
+                        printf("\n");
+                    
+                    fflush(stdout);
+                }
+                MPI_Barrier(MPI_COMM_WORLD);
+            }
+
             if (stat->MPI_ERROR != MPI_SUCCESS)
             {
-                fprintf(stderr, "ERROR! ERROR! %d\n", stat->MPI_ERROR);
+                int tmp;
+                char str[100];
+                MPI_Error_string(stat->MPI_ERROR, str, &tmp);
+                fprintf(stderr, "[%d] ERROR %d: %s.\n\tWhile recieving block %d(%d - %d) from rank %d.\n", rank, stat->MPI_ERROR, str, block, partition_offsets[lastblock], partition_offsets[lastblock]+partition_sizes[lastblock]-1, previous);
                 exit(5);
                 return 5;
             }
 
-            for (int p = 0; p < partition_sizes[block]; ++p)
+            for (int p = partition_offsets[block]; p < partition_offsets[block]+partition_sizes[block]; ++p)
             {
-                particle_t * part = particles+partition_offsets[block]+p;
                 // Re-add the particle if it has changed grid position
-                if (part->prevgrid != grid_coord_flat(grid.size, part->x, part->y))
+                if (particles[p].prev_grid_coord != particles[p].grid_coord)
                 {
-                    printf("%d: Removing %p ....\n", rank, part);
-
-                    printf("Before %d: [", rank);
-                    linkedlist_t * curr = grid.grid[part->prevgrid];
-                    while(curr != 0)
+                    if (! grid_remove(grid, particles[p], particles[p].prev_grid_coord))
                     {
-                        printf("%p ", curr->value);
-                        curr = curr->next;
-                    }
-                    printf("]\n");
-                    fflush(stdout);
-
-                    if (! grid_remove(grid, part, part->prevgrid))
-                    {
-                        fprintf(stdout, "Error: Failed to remove particle '%p'. Code must be faulty. Blame source writer.\n", &particles[i]);
+                        fprintf(stdout, "Error: Failed to remove particle '%p'. Code must be faulty. Blame source writer.\n", &particles[p]);
                         exit(4);
                         return 4;
                     }
-                    printf("REMOVED %d COCK(S) FROM ASS\n", rank); fflush(stdout);
-
-                    printf("After %d: [", rank);
-                    curr = grid.grid[part->prevgrid];
-                    while(curr != 0)
-                    {
-                        printf("%p ", curr->value);
-                        curr = curr->next;
-                    }
-                    printf("]\n");
-                    fflush(stdout);
-
-                    grid_add(grid, part);
+                    grid_add(grid, particles[p]);
                 }
             }
-
-            if (block == next)
-                continue;
-
-            MPI_Request req;
-            MPI_Isend(particles + partition_offsets[block], partition_sizes[block], 
-                      PARTICLE, next, block, MPI_COMM_WORLD, &req);
+            lastblock = block;
         }
+        free(stat);
+        MPI_Barrier(MPI_COMM_WORLD);
         
         #if DEBUG
         times[2] += (read_timer() - start);
@@ -282,7 +298,6 @@ int main(int argc, char **argv)
     //
     free(partition_offsets);
     free(partition_sizes);
-    free(local);
     free(particles);
     if (fsave)
         fclose(fsave);
@@ -291,3 +306,4 @@ int main(int argc, char **argv)
     
     return 0;
 }
+/* */

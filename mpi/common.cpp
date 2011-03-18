@@ -85,6 +85,7 @@ void init_particles( int n, particle_t *p )
 		int k = shuffle[j];
 		shuffle[j] = shuffle[n-i-1];
 
+		p[i].id = i;
 		//
 		//  distribute particles evenly to ensure proper spacing
 		//
