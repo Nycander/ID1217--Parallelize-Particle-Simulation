@@ -89,6 +89,22 @@ void grid_clear(grid_t & grid)
     free(grid.grid);
 }
 
+void grid_clear_row(grid_t & grid, int r)
+{
+    for (int c = 0; c < grid.size; ++c)
+    {
+        int i = r * grid.size + c;
+        linkedlist_t * curr = grid.grid[i];
+        while(curr != 0)
+        {
+            linkedlist_t * tmp = curr->next;
+            free(curr);
+            curr = tmp;
+        }
+        memset(grid.grid + i, 0, sizeof(linkedlist_t*));
+    }
+}
+
 int grid_size(grid_t & grid)
 {
     int count = 0;
@@ -103,3 +119,18 @@ int grid_size(grid_t & grid)
     }
     return count;
 }
+/*
+int grid_print(grid_t & grid)
+{
+    for (int i = 0; i < grid.size * grid.size; ++i)
+    {
+        linkedlist_t * curr = grid.grid[i];
+        while(curr != 0)
+        {
+            printf("x:%d y:%d\n", curr->particle)        
+            curr = curr->next;
+        }
+    }
+    return count;
+}
+*/
