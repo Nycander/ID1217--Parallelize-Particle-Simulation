@@ -21,6 +21,7 @@ Use argument -h for further instructions on running.
 mpi:
 > cd mpi
 > make
-> ./run [n_proc] [...]
+> chmod +x run.sh
+> ./run.sh [n_proc] [...]
 Where n_proc is the number of processors to use.
 Use argument -h for further instructions on running.

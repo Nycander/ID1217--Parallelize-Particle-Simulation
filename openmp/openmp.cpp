@@ -7,7 +7,7 @@
 #include "common.h"
 #include "grid.h"
 
-#define DEBUG 1
+#define DEBUG 0
 
 //
 //  benchmarking program
