@@ -6,6 +6,7 @@
 #include <math.h>
 #include <time.h>
 #include <limits.h>
+#include <mpi.h>
 #ifndef _WIN32
 #include <sys/time.h>
 #else
@@ -159,16 +160,36 @@ void move( particle_t &p )
 //
 //  I/O routines
 //
-void save( FILE *f, int n, particle_t *p )
+void save(FILE * f, int rank, int n, particle_t *p, int * locals, int local_size, MPI_Datatype PARTICLE)
 {
-	static bool first = true;
-	if( first )
+	if (rank == 0)
 	{
-		fprintf( f, "%d %g\n", n, size );
-		first = false;
+		static bool first = true;
+		if( first )
+		{
+			fprintf( f, "%d %g\n", n, size );
+			first = false;
+		}
+		// Receive all particles from all threads
+		int n_others = n - local_size;
+		for (int i = 0; i < n_others; ++i)
+		{
+			particle_t new_particle;
+            MPI_Recv(&new_particle, 1, PARTICLE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            p[new_particle.id] = new_particle;
+		}
+		// Write to file
+		for( int i = 0; i < n; i++ )
+			fprintf( f, "%g %g\n", p[i].x, p[i].y );
 	}
-	for( int i = 0; i < n; i++ )
-		fprintf( f, "%g %g\n", p[i].x, p[i].y );
+	else
+	{
+		// Send all particles to rank 0
+		for (int i = 0; i < local_size; ++i)
+		{
+			MPI_Send(p+locals[i], 1, PARTICLE, 0, rank, MPI_COMM_WORLD);
+		}
+	}
 }
 
 //
