@@ -28,11 +28,11 @@
 
     \subsection{Shared Memory Solution Design}
 
-    Making the algorithm parallel with the shard memory API's are pretty simple.
-    We give each processor a distinct set of particles to keep track of. With
-    such a setup we can run the original solution practically unmodified with
-    the exception that we must identify the critical sections and run them in
-    mutual exclusion.
+    Making the algorithm parallel with the shared memory API's are pretty
+    simple. We give each processor a distinct set of particles to keep track
+    of. With such a setup we can run the original solution practically
+    unmodified with the exception that we must identify the critical sections
+    and run them in mutual exclusion.
 
     The parts which have critical sections are the ones writing to the grid
     structure and in relation to the entire code it's not so bad.
@@ -47,5 +47,5 @@
     matrix instead of a partion of the particles array. This way, each thread
     was responsible for a set of particles which were geografically close.
     Functionality was then implemented for transferring particles between
-    threads and also sending over the border-rows since we still need the Moore-
-    neighbourhood of each particle.
+    threads and also sending over the border-rows since we still need the
+    Moore-neighbourhood of each particle.

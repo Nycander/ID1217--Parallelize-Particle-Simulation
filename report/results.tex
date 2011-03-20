@@ -1,6 +1,6 @@
 % TODO: A plot in log-log scale that shows that your serial and parallel codes run in O(n) time and a description of the data structures that you used to achieve it. In order to get more precise timing estimates, we recommend you to run a program at least 5 times and take the median (rather than the mean) of the simulation times.
 
-\subsection{Linear execution}
+\subsection{Linear Execution}
 
 In order to know that we have achieved the desired result of linear execution we
 had to plot the running time against the size of the input. To to this we made a
@@ -37,7 +37,7 @@ Our memory-shared parallel programs also proved to have linear execution when ru
 	\caption{Execution time plotted against size of $n$ for the MPI implementation.}
 \end{figure}
 
-\subsection{Optimal parallelization}
+\subsection{Optimal Parallelization}
 
 The second part of the problem was to parallelize the code so that the running
 time would be $O(n) / T$, where $n$ is the number of particles and $T$ is the
@@ -57,9 +57,6 @@ in order to have optimal speed-up $k$ must be very low. However, in our case
 this linear work shows through already after $2$ threads. But this critical
 section of the code is required for our choice of design.
 
-% TODO: Speedup plots that show how closely your parallel codes approach the
-% idealized p-times speedup and a discussion on whether it is possible to do
-% better.
 \begin{figure}[H]
 	\includegraphics{plots/openmp_speedup.pdf}
 	\caption{Speedup factor calculated on the \texttt{s1810.it.kth.se} computer for the OpenMP implementation.}
@@ -69,14 +66,10 @@ section of the code is required for our choice of design.
 	\caption{Speedup factor calculated on the \texttt{s1810.it.kth.se} computer for the POSIX-threads implementation.}
 \end{figure}
 
-% TODO: Where does the time go? Consider breaking down the runtime into
-% computation time, synchronization time and/or communication time. How do
-% they scale with p?
-
 \subsection{Problems with MPI}
 
 The MPI implementation was by far the hardest of to get efficient, sadly we
-wheren't able to get it as efficient as we hoped. Message passing is by its
+were not able to get it as efficient as we hoped. Message passing is by its
 nature slower than shared memory. While threads using shared memory always has
 the same information as all other threads, message passing has no shared memory
 and must therefore send messages in order to share information, this of course
