@@ -150,10 +150,7 @@ int main(int argc, char **argv)
         //
         if (fsave && (step%SAVEFREQ) == 0)
         {
-            printf("[%d] Saving!\n", rank);fflush(stdout);
             save(fsave, rank, n, particles, locals, local_size, PARTICLE);
-            printf("[%d] Done saving!\n", rank);fflush(stdout);
-            MPI_Barrier(MPI_COMM_WORLD);
         }
         
         #if DEBUG

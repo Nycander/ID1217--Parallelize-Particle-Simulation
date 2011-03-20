@@ -190,6 +190,8 @@ void save(FILE * f, int rank, int n, particle_t *p, int * locals, int local_size
 			MPI_Send(p+locals[i], 1, PARTICLE, 0, rank, MPI_COMM_WORLD);
 		}
 	}
+	// We don't want any messages spilling out from this function, so wait for everyone.
+    MPI_Barrier(MPI_COMM_WORLD);
 }
 
 //
