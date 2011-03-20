@@ -6,24 +6,46 @@
         each particle it calculated the distance to each other particle, if the
         particle was within the cutoff range it would also calculate and apply
         the appropriate force to the particle. The problem with this is that the
-        checks the distance to all other particles when clearly not all of them
-        are relevant. The solution we used was to divide the plane into a grid
-        of squares, we then mapped each particle to a cell in the grid. By
-        making sure that the sides of the cells is not less than the cutoff
-        range, we can be sure that all relevant particles to a given particle
-        are within the eight adjacent grid 
+        algorithm checks the distance to all other particles when clearly not
+        all of them are relevant. The solution we used was to divide the plane
+        into a grid of squares, we then mapped each particle to a cell in the
+        grid. By making sure that the sides of the cells is not less than the
+        cutoff range, we can be sure that all relevant particles to a given
+        particle are within the Moore neighbourhood of the cell. This means that
+        for each cell we need to check 8 other cells, which is constant work.
 
+        And as can be shown by the formulas below the total grid size has a
+        linear relation with $n$.
 
-        \begin{equation}
-            gridSize = \frac{\sqrt{0.0005 \cdot n}}{0.01} + 1 \\
-        \end{equation}
-        \begin{equation}
-            grid.size = gridSize^2 = \left(\frac{\sqrt{0.0005 \cdot n}}{0.01} + 1\right)^2
-        \end{equation}
+        \begin{equation*}
+            \text{grid edge length} = \frac{\sqrt{0.0005 \cdot n}}{0.01} + 1 \\
+        \end{equation*}
+        \begin{equation*}
+            \text{grid total size} = \text{grid edge length}^2 = \left(\frac{\sqrt{0.0005 \cdot n}}{0.01} + 1\right)^2 \approx O(n)
+        \end{equation*}
 
-    \subsection{Parallelization Design with Shared Memory}% TODO: A description of the synchronization you used in the shared memory implementation.
+        As such, our improved algorithm should run in linear time.
 
-    \subsection{Parallelization Design with Distributed Memory}% TODO: A description of the communication you used in the distributed memory implementation.
+    \subsection{Shared Memory Solution Design}
 
-    %Maybe this does not need its own seciton? TODO
-    \subsection{Design Decisions}% TODO: A description of the design choices that you tried and how did they affect the performance.
+    Making the algorithm parallel with the shard memory API's are pretty simple.
+    We give each processor a distinct set of particles to keep track of. With
+    such a setup we can run the original solution practically unmodified with
+    the exception that we must identify the critical sections and run them in
+    mutual exclusion.
+
+    The parts which have critical sections are the ones writing to the grid
+    structure and in relation to the entire code it's not so bad.
+
+    \subsection{Message Passing Solution Design}
+
+    Converting a shared memory solution to a message passing solution is quite a
+    big step. Here we have to redesign a bit to have minimum amount of memory
+    sharing.
+
+    What we did was that each thread got assigned a number of rows of the grid
+    matrix instead of a partion of the particles array. This way, each thread
+    was responsible for a set of particles which were geografically close.
+    Functionality was then implemented for transferring particles between
+    threads and also sending over the border-rows since we still need the Moore-
+    neighbourhood of each particle.
