@@ -74,7 +74,7 @@ int main(int argc, char **argv)
     MPI_Bcast(particles, n, PARTICLE, 0, MPI_COMM_WORLD);
 
 #if DEBUG
-    double times[5]; // TODO: Remove this.
+    double times[3]; // TODO: Remove this.
 #endif
 
     // Create a grid for optimizing the interactions
@@ -103,11 +103,6 @@ int main(int argc, char **argv)
     // Define local block
     int first = partition_offsets[rank];
     int last = partition_offsets[rank] + Max(0, partition_sizes[rank] - 1);
-    if (rank == 0)
-        printf("Grid size = %d\n", grid.size);
-    printf("[%d]: Rows: %d -> %d\n", rank, first, last);
-    fflush(stdout);
-    MPI_Barrier(MPI_COMM_WORLD);
 
     //
     //  simulate a number of time steps
@@ -115,6 +110,9 @@ int main(int argc, char **argv)
     double simulation_time = read_timer();
     for (int step = 0; step < NSTEPS; step++)
     {
+        // Make sure all processors are on the same frame
+        MPI_Barrier(MPI_COMM_WORLD);
+
         //
         //  save current step if necessary (slightly different semantics than in other codes)
         //
@@ -158,7 +156,6 @@ int main(int argc, char **argv)
         start = read_timer();
         #endif
 
-        //printf("[%d] Size before clear: %d\n", rank, grid_size(grid));fflush(stdout);
         // Clear rows first-1 and last+1
         if (first > 0)
         {
@@ -168,12 +165,6 @@ int main(int argc, char **argv)
         {
             grid_clear_row(grid, last+1);
         }
-
-        //printf("[%d] Size before move: %d\n", rank, grid_size(grid));fflush(stdout);
-
-        // Keep track of what processors we will communicate with
-        int sent_to[n_proc];
-        memset(sent_to, 0, sizeof(int)*n_proc);
 
         //
         //  Move particles
@@ -201,26 +192,8 @@ int main(int argc, char **argv)
                 grid_add(grid, particles[id]);
 
                 // Send it to neighbour
-                int target = 0;
-                while(target < n_proc)
-                {
+                int target = (gx < first ? rank-1 : rank+1);
 
-                    int f = partition_offsets[target];
-                    int l = partition_offsets[target] + Max(0, partition_sizes[target] - 1);
-
-                    if (gx >= f && gx <= l)
-                    {
-                        //printf("[%d]: Found target for gx=%d which is %d.\n", rank, gx, target);
-                        fflush(stdout);
-                        break;
-                    }
-                    
-                    target++;
-                }
-
-                sent_to[target] = 1;
-
-                //printf("[%d]: Sending %d to %d.\n", rank, id, target);
                 fflush(stdout);
                 MPI_Request request;
                 MPI_Isend(particles+id, 1, PARTICLE, target, target, MPI_COMM_WORLD, &request);
@@ -247,66 +220,37 @@ int main(int argc, char **argv)
         MPI_Request request;
         // Send first row
         if (first > 0)
-        {
-            sent_to[rank-1] = 1;
-            //printf("[%d] Sending first row %d.\n", rank, first);
             for (int c = 0; c < grid.size; ++c)
                 for(linkedlist_t * current = grid.grid[first * grid.size + c]; 
                     current != 0; 
                     current = current->next)
-                {
-                    //printf("[%d] \tSending %d\n", rank, current->particle_id);
                     MPI_Isend(particles+current->particle_id, 1, PARTICLE, rank-1, rank-1, MPI_COMM_WORLD, &request);
-                }
-        }
         // Send last row
         if (last < grid.size-1)
-        {
-            sent_to[rank+1] = 1;
-            //printf("[%d] Sending last row %d.\n", rank, last);
             for (int c = 0; c < grid.size; ++c)
                 for(linkedlist_t * current = grid.grid[(last) * grid.size + c]; 
                     current != 0; 
                     current = current->next)
-                {
-                    //printf("[%d] \tSending %d\n", rank, current->particle_id);
                     MPI_Isend(particles+current->particle_id, 1, PARTICLE, rank+1, rank+1, MPI_COMM_WORLD, &request);
-                }
-        }
-        particle_t end;
-        end.id = -1;
 
         // Tell neighbouring rows that we are done.
-        if (first > 0)            MPI_Isend(&end, 1, PARTICLE, rank-1, rank, MPI_COMM_WORLD, &request);
-        if (last  < grid.size-1)  MPI_Isend(&end, 1, PARTICLE, rank+1, rank, MPI_COMM_WORLD, &request);
-
-        #if DEBUG
-        times[2] += (read_timer() - start);
-        start = read_timer();
-        #endif
-
-        //printf("[%d] Size before receive: %d\n", rank, grid_size(grid));fflush(stdout);
+        particle_t end;
+        end.id = -1;
+        if (first > 0)              MPI_Isend(&end, 1, PARTICLE, rank-1, rank, MPI_COMM_WORLD, &request);
+        if (last  < grid.size-1)    MPI_Isend(&end, 1, PARTICLE, rank+1, rank, MPI_COMM_WORLD, &request);
 
         // Receive new particles from neighbouring threads.
         particle_t new_particle;
         int breakcount = 0;
+        int breaklimit = 2;
+        if (first == 0) breaklimit--;
+        if (last == grid.size-1) breaklimit--;
 
-        // Here be dragons.
-        int sent_tos[n_proc];
-        MPI_Allreduce(sent_to, sent_tos, n_proc, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD);
-        int breaklimit = sent_tos[rank];
-
-        #if DEBUG
-        times[3] += (read_timer() - start);
-        start = read_timer();
-        #endif
-        //printf("[%d] \tGonna wait for %d breaks.\n", rank, breaklimit);
         while(breakcount < breaklimit)
         {
             MPI_Status stat;
             MPI_Recv(&new_particle, 1, PARTICLE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &stat);
 
-            //printf("[%d] \t\tReceived %d.\n", rank, new_particle.id);
             if (new_particle.id == -1)
             {
                 breakcount++;
@@ -315,29 +259,16 @@ int main(int argc, char **argv)
 
             particles[new_particle.id] = new_particle;
 
-            int gx = grid_coord(new_particle.x);
-            if (gx < first-1 || gx > last+1)
-            {
-                //printf("[%d]: %d < %d || %d > %d .... VA I HELVETE?!?!?!? ELÄNDES SATFLÄSK!  <<<--------- FFFFffffffffuuuuuu\n"
-                //        ,rank, gx, first-1, gx, last+1);
-                fflush(stdout);
-                exit(101);
-                return 101;
-            }
-
             grid_add(grid, particles[new_particle.id]);
         }
-        //printf("[%d] Size after receive: %d  <----\n", rank, grid_size(grid));fflush(stdout);
         
         #if DEBUG
-        times[4] += (read_timer() - start);
+        times[2] += (read_timer() - start);
         start = read_timer();
         #endif
     }
     simulation_time = read_timer() - simulation_time;
     
-    MPI_Barrier(MPI_COMM_WORLD);
-
     if (rank == 0)
         printf("n = %d, n_procs = %d, simulation time = %f seconds\n", n, n_proc, simulation_time);
 
@@ -348,14 +279,12 @@ int main(int argc, char **argv)
     {
         printf("Force: %f\n", rank, result[0]/n_proc);
         printf("Move: %f\n", rank, result[1]/n_proc);
-        printf("Send: %f\n", rank, result[2]/n_proc);
-        printf("Scatter: %f\n", rank, result[3]/n_proc);
-        printf("Receive: %f\n", rank, result[4]/n_proc);
+        printf("Communication: %f\n", rank, result[2]/n_proc);
     }
     #endif
 
     //
-    //  release resources
+    //  Release resources
     //
     free(partition_offsets);
     free(partition_sizes);
