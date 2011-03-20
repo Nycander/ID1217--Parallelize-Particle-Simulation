@@ -37,8 +37,6 @@ const int SAVEFREQ = 10;
 typedef struct 
 {
   int id;
-  int grid_coord;
-  int prev_grid_coord;
   double x;
   double y;
   double vx;
