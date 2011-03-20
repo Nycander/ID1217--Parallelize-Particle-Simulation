@@ -77,17 +77,20 @@ section of the code is required for our choice of design.
 
 The MPI implementation was by far the hardest of to get efficient, sadly we
 wheren't able to get it as efficient as we hoped. Message passing is by its
-nature slower than shared memory. While shared memory always has the same
-information as all other threads, message passing has no shared memory and must
-therefore send messages in order to share information, this of course takes
-extra time. The breakdown of our MPI implementation\ref{breakdown} shows that the
-computation time of the particles follows the near optimal speedup as well as
-the other implementations. But when we run multiple processes the message
-passing takes about 0.4 seconds, this is a significant fraction of the whole
-execution time. When running with four processes the message passing is stands for
-37\% of the computation time this, we could not find a way to remove this
-overhead, it will allways be there and stand for a more significant part of the
-computation time as the apply force and move steps takes less and less time.
+nature slower than shared memory. While threads using shared memory always has
+the same information as all other threads, message passing has no shared memory
+and must therefore send messages in order to share information, this of course
+takes extra time. The breakdown (figure 8) of our MPI implementation shows that
+the computation time of the movement of the particles (move and force) follows
+the near optimal speedup just as well as the other implementations. But when we
+run multiple processes in MPI the message passing takes about 0.4 seconds, this
+is a significant fraction of the whole execution time. When running with four
+processes the message passing stands for 37\% of the computation time.
+Unfortunately we could not find a way to remove this overhead. The message
+passing will take up a more and more significant fraction of the computation
+time because the real computation will less and less time as more processes are
+added.
+
 \begin{figure}[H]
     \label{breakdown}
 	\includegraphics{mpilol}
