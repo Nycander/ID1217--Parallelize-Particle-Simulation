@@ -4,5 +4,6 @@ set terminal pdfcairo #enhanced "Helvetica" 16
 
 
 set log y
+set log x
 plot "plot_dir/serial.dat" using 1:2 with lines\
     title "serial"

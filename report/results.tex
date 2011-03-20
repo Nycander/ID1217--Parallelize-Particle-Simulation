@@ -65,7 +65,12 @@ section of the code is required for our choice of design.
 	\includegraphics{plots/pthreads_speedup.pdf}
 	\caption{Speedup factor calculated on the \texttt{s1810.it.kth.se} computer for the POSIX-threads implementation.}
 \end{figure}
-
+\begin{figure}[H]
+	\includegraphics{plots/mpi_speedup.pdf}
+	\caption{Speedup factor calculated on the \texttt{s1810.it.kth.se} computer
+    for the MPI implementation.}
+\end{figure}
+\newpage
 \subsection{Problems with MPI}
 
 The MPI implementation was by far the hardest of to get efficient, sadly we
@@ -73,7 +78,7 @@ were not able to get it as efficient as we hoped. Message passing is by its
 nature slower than shared memory. While threads using shared memory always has
 the same information as all other threads, message passing has no shared memory
 and must therefore send messages in order to share information, this of course
-takes extra time. The breakdown (figure 8) of our MPI implementation shows that
+takes extra time. The breakdown (figure 9) of our MPI implementation shows that
 the computation time of the movement of the particles (move and force) follows
 the near optimal speedup just as well as the other implementations. But when we
 run multiple processes in MPI the message passing takes about 0.4 seconds, this
@@ -87,6 +92,9 @@ added.
 \begin{figure}[H]
     \label{breakdown}
 	\includegraphics[width=\textwidth]{mpilol}
-	\caption{Breakdown of what time is spent on when running the MPI
-    implementation.}
+	\caption{Breakdown of what time is spent on when running the MPI implementation.
+        Force is the time spent running the apply force method, move is the time
+        spent moving the particles to the new positions and communication is the
+        time spent on communicating the new particle positions between the
+        processes.}
 \end{figure}

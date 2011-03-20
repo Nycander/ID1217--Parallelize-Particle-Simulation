@@ -50,12 +50,14 @@ void grid_add(grid_t & grid, particle_t * p)
     newElement->value = p;
 
     // Beginning of critical section
+    double critical_time = read_timer();
     omp_set_lock(&grid.lock[gridCoord]);
     newElement->next = grid.grid[gridCoord];
 
     grid.grid[gridCoord] = newElement;
     // End of critical section
     omp_unset_lock(&grid.lock[gridCoord]);
+    add_critical_time(read_timer() - critical_time);
 }
 
 //
@@ -72,6 +74,7 @@ bool grid_remove(grid_t & grid, particle_t * p, int gridCoord)
         return false;
     }
 
+    double critical_time = read_timer();
     omp_set_lock(&grid.lock[gridCoord]);
 
     linkedlist_t ** nodePointer = &(grid.grid[gridCoord]);
@@ -90,6 +93,7 @@ bool grid_remove(grid_t & grid, particle_t * p, int gridCoord)
     }
 
     omp_unset_lock(&grid.lock[gridCoord]);
+    add_critical_time(read_timer() - critical_time);
     return !!current;
 }
 
