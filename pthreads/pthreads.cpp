@@ -11,7 +11,7 @@
 
 //
 //  global variables
-int n, n_threads;
+int n, nsteps, savefreq, n_threads;
 particle_t *particles;
 FILE *fsave;
 pthread_barrier_t barrier;
@@ -43,7 +43,7 @@ void *thread_routine( void *pthread_id )
     //printf("Thread %d running, particles %d -> %d.\n", thread_id, first, last);
 
     // Simulate a number of time steps
-    for( int step = 0; step < NSTEPS; step++ )
+    for( int step = 0; step < nsteps; step++ )
     {
         #if DEBUG
         double start = read_timer();
@@ -106,7 +106,7 @@ void *thread_routine( void *pthread_id )
         #endif
 
         // Save if necessary
-        if( thread_id == 0 && fsave && (step%SAVEFREQ) == 0 )
+        if( thread_id == 0 && fsave && (step%savefreq) == 0 )
             save( fsave, n, particles );
     }
 
@@ -135,10 +135,14 @@ int main( int argc, char **argv )
         printf( "-n <int> to set the number of particles\n" );
         printf( "-p <int> to set the number of threads\n" );
         printf( "-o <filename> to specify the output file name\n" );
+        printf( "-s <int> to set the number of steps in the simulation\n" );
+        printf( "-f <int> to set the frequency of saving particle coordinates (e.g. each ten's step)\n" );
         return 0;
     }
     
     n = read_int( argc, argv, "-n", 1000 );
+    nsteps = read_int(argc, argv, "-s", NSTEPS);
+    savefreq = read_int(argc, argv, "-f", SAVEFREQ);
     n_threads = read_int( argc, argv, "-p", 2 );
     char *savename = read_string( argc, argv, "-o", NULL );
     
