@@ -2,3 +2,4 @@
 /winvisualizer/output.txt
 *.o
 *.exe
+/report/report.pdf
