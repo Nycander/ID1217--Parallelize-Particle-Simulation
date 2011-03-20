@@ -2,6 +2,7 @@
 #define __CS_COMMON_H__
 
 #include <stdio.h>
+#include <mpi.h>
 
 //
 //  tuned constants
@@ -63,7 +64,7 @@ void move( particle_t &p );
 //  I/O routines
 //
 FILE *open_save( char *filename, int n );
-void save( FILE *f, int n, particle_t *p );
+void save( FILE * f, int rank, int n, particle_t *p, int * locals, int local_size, MPI_Datatype PARTICLE);
 
 //
 //  argument processing routines

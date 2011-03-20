@@ -40,8 +40,8 @@ int main(int argc, char **argv)
     //
     //  Allocate generic resources
     //
-    FILE *fsave = savename && rank == 0 ? fopen(savename, "w") : NULL;
-    particle_t *particles = (particle_t*) malloc(n * sizeof(particle_t));
+    FILE *fsave = savename ? fopen(savename, "w") : NULL;
+    particle_t * particles = (particle_t*) malloc(n * sizeof(particle_t));
     grid_t grid;
     
     //
@@ -112,12 +112,6 @@ int main(int argc, char **argv)
     {
         // Make sure all processors are on the same frame
         MPI_Barrier(MPI_COMM_WORLD);
-
-        //
-        //  save current step if necessary (slightly different semantics than in other codes)
-        //
-        if (fsave && (step%SAVEFREQ) == 0)
-            save(fsave, n, particles); // Todo: this will BREAK
         
         #if DEBUG
         double start = read_timer();
@@ -150,6 +144,14 @@ int main(int argc, char **argv)
                                 apply_force(particles[i], particles[neighbour->particle_id]);
                 }
 
+
+        //
+        //  save current step if necessary (slightly different semantics than in other codes)
+        //
+        if (fsave && (step%SAVEFREQ) == 0)
+        {
+            save(fsave, rank, n, particles, locals, local_size, PARTICLE);
+        }
         
         #if DEBUG
         times[0] += (read_timer() - start);
